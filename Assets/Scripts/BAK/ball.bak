@@ -1,0 +1,104 @@
+﻿using UnityEngine;
+using System.Collections;
+
+public class ball : MonoBehaviour {
+
+	public Vector2 upForce = new Vector2(0,200);
+	public Vector2 downForce = new Vector2(0,-200);
+	public Vector2 rightForce = new Vector2 (100, 0);
+    public Vector2 leftForce = new Vector2(-100, 0);
+	public Vector2 jump = new Vector2(0,50);
+	bool inAir = true;
+    bool inLeft = false;
+    bool inRight = false;
+	bool toUp = false;
+
+    private void forceToDown()
+    {
+		if (!inAir)
+			return;
+        rigidbody2D.AddForce(downForce);
+    }
+    private void forceToUp()
+    {
+		if (inAir)
+			return;
+        rigidbody2D.AddForce(upForce);
+		rigidbody2D.gravityScale = 0;
+		inAir = true;
+    }
+    private void forceToLeft()
+    {
+        if (inLeft)
+            return;
+        rigidbody2D.AddForce(leftForce);
+        inLeft = true;
+    }
+    private void unForceLeft()
+    {
+		if (!inLeft)
+            return;
+        //rigidbody2D.AddForce(new Vector2(leftForce.x * -1,leftForce.y));
+        inLeft = false;
+    }
+    private void forceToRight()
+    {
+		if (inRight)
+            return;
+        rigidbody2D.AddForce(rightForce);
+        inRight = true;
+    }
+    private void unForceRight()
+    {
+		if (!inRight)
+            return;
+        //rigidbody2D.AddForce(new Vector2(rightForce.x * -1,rightForce.y));
+        inRight = false;
+    }
+
+	private void Jump(){
+		rigidbody2D.velocity = Vector2.zero;
+		if (!toUp) {
+			rigidbody2D.gravityScale = 1;
+			rigidbody2D.AddForce (jump);
+		} else {
+			forceToUp ();
+			toUp = false;
+		}
+	}
+	// Use this for initialization
+	void Start () {
+		//Jump();
+	}
+	
+	// Update is called once per frame
+	void Update () {
+
+		if (Input.GetKeyUp ("up")){
+            //forceToUp();
+			toUp = true;
+		}
+		if(Input.GetKeyUp("down")){
+            forceToDown();
+		}
+		if (Input.GetKeyUp ("right")){
+            forceToRight();
+		}
+        if (Input.GetKeyUp("left")){
+            forceToLeft();
+        }						
+	}
+
+	public void onGround(){
+		inAir = false;
+        if (inLeft)
+            unForceLeft();
+        if (inRight)
+            unForceRight();
+		Jump();
+	}
+
+	public void onCeiling(){
+		forceToDown ();
+	}
+}

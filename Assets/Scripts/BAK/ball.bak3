@@ -1,0 +1,263 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading;
+
+#region States
+
+public enum StateType {IN_AIR,ON_GROUND,TO_DOWN,TO_LEFT,TO_RIGHT}
+
+interface State{
+	void Left(ball context);
+	void Right(ball context);
+	void Up(ball context);
+	void Down(ball context);
+	void Jump(ball context);
+	string ToString ();
+}
+
+class StateInAir : State
+{
+	public void Left(ball context)
+	{
+		context.MoveLeft();
+	}
+	public void Right(ball context)
+	{
+		context.MoveRight();
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		context.DropDown();
+	}
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "InAir";
+	}
+}
+
+class StateOnGround : State
+{
+	public void Left(ball context)
+	{
+		context.MoveLeft();
+	}
+	public void Right(ball context)
+	{
+		context.MoveRight();
+	}
+	public void Up(ball context)
+	{
+		context.Fly();
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		context.Jump();
+	}
+
+	override public string ToString ()
+	{
+		return "OnGround";
+	}
+}
+
+class StateToDown : State
+{
+	public void Left(ball context)
+	{
+		return;
+	}
+	public void Right(ball context)
+	{
+		return;
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "ToDown";
+	}
+}
+
+class StateToLeft : State
+{
+	public void Left(ball context)
+	{
+		return;
+	}
+	public void Right(ball context)
+	{
+		return;
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "ToLeft";
+	}
+}
+
+class StateToRight : State
+{
+	public void Left(ball context)
+	{
+		return;
+	}
+	public void Right(ball context)
+	{
+		return;
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "ToRight";
+	}
+}
+
+#endregion
+
+public class ball : MonoBehaviour 
+{
+	Vector2 m_StopVector = new Vector2(1,1);
+	float m_speed = 5.0f;
+	Vector2 m_DownVector = new Vector2(0,-1);
+	Vector2 m_UpVector = new Vector2(0,1);
+	Vector2 m_LeftVector = new Vector2(-1,0);
+	Vector2 m_RightVector = new Vector2(1,0);
+	float m_LeftRighForce = 100.0f;
+	float m_UpDown = 500.50f;
+	float m_Jump = 250.0f;
+	State m_State;
+	Dictionary<StateType,State> m_States;
+	Vector2 m_moveVector;
+
+	public void setState(StateType type)
+	{
+		//string msg = "From state: "+m_State.ToString();
+		if(m_States.ContainsKey(type))
+		   m_State = m_States[type];
+		//msg += " to state: "+m_State.ToString();
+		//Debug.Log(msg);
+	}
+
+	// Use this for initialization
+	void Start () 
+	{
+		m_moveVector = m_StopVector;
+		m_States = new Dictionary<StateType, State>(5);
+		m_States[StateType.IN_AIR] = new StateInAir();
+		m_States[StateType.ON_GROUND] = new StateOnGround();
+		m_States[StateType.TO_DOWN] = new StateToDown();
+		m_States[StateType.TO_LEFT] = new StateToLeft();
+		m_States[StateType.TO_RIGHT] = new StateToRight();
+		m_State = m_States[StateType.IN_AIR];
+		m_State.Down(this);
+	}
+
+	public void MoveLeft()
+	{
+		setState(StateType.TO_LEFT);
+	}
+
+	public void MoveRight()
+	{
+		setState(StateType.TO_RIGHT);
+	}
+
+	public void DropDown()
+	{
+		m_moveVector = m_DownVector;
+		setState(StateType.TO_DOWN);
+	}
+
+	public void Fly()
+	{
+		m_moveVector = m_UpVector;
+		setState(StateType.IN_AIR);
+	}
+
+	public void Jump()
+	{
+		m_moveVector = m_UpVector;
+	}
+
+	// Update is called once per frame
+	void FixedUpdate () 
+	{
+		rigidbody2D.transform.Translate(m_moveVector * Time.deltaTime * m_speed);
+		if (Input.GetKeyUp(KeyCode.UpArrow)){
+			m_State.Up(this);
+		}
+		if(Input.GetKeyUp(KeyCode.DownArrow)){
+			m_State.Down(this);
+		}
+		if (Input.GetKeyUp (KeyCode.RightArrow)){
+			m_State.Right(this);
+		}
+        if (Input.GetKeyUp(KeyCode.LeftArrow)){
+			m_State.Left(this);
+        }						
+	}
+
+	public void onGround()
+	{
+		setState(StateType.ON_GROUND);
+		m_State.Jump(this);
+	}
+
+	public void onCeiling()
+	{
+		m_State.Down(this);
+	}
+}

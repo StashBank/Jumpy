@@ -1,0 +1,23 @@
+Initialize engine version: 4.5.4f1 (e036f44c54c9)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 10.0]
+    Renderer: Intel(R) HD Graphics (ID=0x46)
+    Vendor:   Intel
+    VRAM:     64 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: D:\Unity\Projects\Realese\Jummpy_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading D:\Unity\Projects\Realese\Jummpy_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-CSharp-firstpass.dll (this message is harmless)
+Loading D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-CSharp-firstpass.dll into Unity Child Domain
+Platform assembly: D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-UnityScript-firstpass.dll (this message is harmless)
+Loading D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-UnityScript-firstpass.dll into Unity Child Domain
+Platform assembly: D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-UnityScript.dll (this message is harmless)
+Loading D:\Unity\Projects\Realese\Jummpy_Data\Managed\Assembly-UnityScript.dll into Unity Child Domain
+- Completed reload, in  0.361 seconds
+desktop: 1366x768 60Hz; virtual: 1366x768 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+Platform assembly: D:\Unity\Projects\Realese\Jummpy_Data\Managed\System.dll (this message is harmless)

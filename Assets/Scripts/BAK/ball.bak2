@@ -1,0 +1,325 @@
+﻿using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+
+#region States
+
+public enum StateType {IN_AIR,ON_GROUND,TO_DOWN,TO_LEFT,TO_RIGHT,IN_JUMP}
+
+interface State{
+	void Left(ball context);
+	void Right(ball context);
+	void Up(ball context);
+	void Down(ball context);
+	void Jump(ball context);
+	string ToString ();
+}
+
+class StateInAir : State
+{
+	public void Left(ball context)
+	{
+		context.rigidbody2D.AddForce(context.leftForce);
+		context.rigidbody2D.gravityScale = 1;
+		context.setState(StateType.TO_LEFT);
+	}
+	public void Right(ball context)
+	{
+		context.rigidbody2D.AddForce(context.rightForce);
+		context.rigidbody2D.gravityScale = 1;
+		context.setState(StateType.TO_RIGHT);
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		context.rigidbody2D.AddForce(context.downForce);
+		context.rigidbody2D.gravityScale = 0;
+		context.setState(StateType.TO_DOWN);
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "InAir";
+	}
+}
+
+class StateOnGround : State
+{
+	public void Left(ball context)
+	{
+		context.rigidbody2D.AddForce(context.leftForce);
+		context.rigidbody2D.gravityScale = 1;
+		context.setState(StateType.TO_LEFT);
+	}
+	public void Right(ball context)
+	{
+		context.rigidbody2D.AddForce(context.rightForce);
+		context.rigidbody2D.gravityScale = 1;
+		context.setState(StateType.TO_RIGHT);
+	}
+	public void Up(ball context)
+	{
+		context.rigidbody2D.AddForce(context.upForce);
+		context.rigidbody2D.gravityScale = 0;
+		context.setState(StateType.IN_AIR);
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "OnGround";
+	}
+}
+
+class StateToDown : State
+{
+	public void Left(ball context)
+	{
+		return;
+	}
+	public void Right(ball context)
+	{
+		return;
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "ToDown";
+	}
+}
+
+class StateToLeft : State
+{
+	public void Left(ball context)
+	{
+		return;
+	}
+	public void Right(ball context)
+	{
+		return;
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "ToLeft";
+	}
+}
+
+class StateToRight : State
+{
+	public void Left(ball context)
+	{
+		return;
+	}
+	public void Right(ball context)
+	{
+		return;
+	}
+	public void Up(ball context)
+	{
+		return;
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		return;
+	}
+
+	override public string ToString ()
+	{
+		return "ToRight";
+	}
+}
+
+class StateInJump : State
+{
+	public void Left(ball context)
+	{
+		context.rigidbody2D.AddForce(context.leftForce);
+		context.rigidbody2D.gravityScale = 1;
+		context.setState(StateType.TO_LEFT);
+	}
+	public void Right(ball context)
+	{
+		context.rigidbody2D.AddForce(context.rightForce);
+		context.rigidbody2D.gravityScale = 1;
+		context.setState(StateType.TO_RIGHT);
+	}
+	public void Up(ball context)
+	{
+		context.setState(StateType.IN_AIR);
+	}
+	public void Down(ball context)
+	{
+		return;
+	}
+
+	public void Jump(ball context)
+	{
+		context.rigidbody2D.AddForce(context.jumpForce);
+		context.rigidbody2D.gravityScale = 1;
+	}
+	
+	override public string ToString ()
+	{
+		return "InJump";
+	}
+}
+#endregion
+
+public class ball : MonoBehaviour 
+{
+
+	Vector2 m_upForce = new Vector2(0,200);
+	Vector2 m_downForce = new Vector2(0,-200);
+	Vector2 m_rightForce = new Vector2 (100, 0);
+    Vector2 m_leftForce = new Vector2(-100, 0);
+	Vector2 m_jumpForce = new Vector2(0,50);
+	State m_State;
+	Dictionary<StateType,State> m_States;
+
+	#region Vectors
+	public Vector2 upForce
+	{
+		get
+		{
+			return m_upForce;
+		}
+	}
+	public Vector2 downForce
+	{
+		get
+		{
+			return m_downForce;
+		}
+	}
+	public Vector2 rightForce
+	{
+		get
+		{
+			return m_rightForce;
+		}
+	}
+	public Vector2 leftForce
+	{
+		get
+		{
+			return m_leftForce;
+		}
+	}
+	public Vector2 jumpForce
+	{
+		get
+		{
+			return m_jumpForce;
+		}
+	}
+	#endregion
+
+	public void setState(StateType type)
+	{
+		string msg = "From state: "+m_State.ToString();
+		if(m_States.ContainsKey(type))
+		   m_State = m_States[type];
+		msg += " to state: "+m_State.ToString();
+		Debug.Log(msg);
+	}
+
+	// Use this for initialization
+	void Start () 
+	{
+		m_States = new Dictionary<StateType, State>(5);
+		m_States[StateType.IN_AIR] = new StateInAir();
+		m_States[StateType.ON_GROUND] = new StateOnGround();
+		m_States[StateType.TO_DOWN] = new StateToDown();
+		m_States[StateType.TO_LEFT] = new StateToLeft();
+		m_States[StateType.TO_RIGHT] = new StateToRight();
+		m_States[StateType.IN_JUMP] = new StateInJump();
+		m_State = m_States[StateType.IN_AIR];
+		m_State.Down(this);
+	}
+	
+	// Update is called once per frame
+	void FixedUpdate () 
+	{
+		if (Input.GetKeyUp ("up")){
+			m_State.Up(this);
+		}
+		if(Input.GetKeyUp("down")){
+			m_State.Down(this);
+		}
+		if (Input.GetKeyUp ("right")){
+			m_State.Right(this);
+		}
+        if (Input.GetKeyUp("left")){
+			m_State.Left(this);
+        }						
+	}
+
+	public void onGround()
+	{
+		Debug.Log("On ground");
+		if(m_State.ToString() == m_States[StateType.IN_AIR].ToString())
+		{
+			setState(StateType.ON_GROUND);
+			m_State.Up(this);
+		}
+		else
+		{
+			setState(StateType.ON_GROUND);
+			m_State.Jump(this);
+		}
+
+	}
+
+	public void onCeiling()
+	{
+		m_State.Down(this);
+	}
+}
