@@ -16,7 +16,8 @@ public enum ShelfType {
     DoubleSpike, //Шипы по обеем сторонам полки. Горизонтальная|Вертикальная
     BotomSpike, //Шипы снизу полки (Горизонтальная)
     PullUp,
-    Cloud //?????
+    Cloud, //?????
+    TELEPORT
 }
 public class Shelf : MonoBehaviour {
 
