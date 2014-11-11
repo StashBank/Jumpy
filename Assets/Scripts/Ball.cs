@@ -16,8 +16,8 @@ public struct MoveInfo // Структура для хранения инфор�
 interface BallState // Общий интерфейс для всех состояний.
 {
     void UpdateParams();
-	void Left(); // Двигатся влево
-	void Right(); // Двигатся вправо
+	void Left(int columns = 1); // Двигатся влево
+    void Right(int columns = 1); // Двигатся вправо
 	void Up(); // Двигатся вверх
 	void Down(); // Двигатся вниз
 	void Jump(); // Прижки
@@ -40,11 +40,11 @@ class BallStateHide : BallState
     {
         m_context.gameObject.SetActive(false);
     }
-    public void Left() 
+    public void Left(int columns) 
     {
         return;
     }
-    public void Right() 
+    public void Right(int columns) 
     { 
         return; 
     }
@@ -100,15 +100,15 @@ class BallStateShow : BallState
     {
         m_context.gameObject.SetActive(true);
     }
-    public void Left() 
+    public void Left(int columns) 
     {
         m_context.SetState(BallStateType.TO_LEFT);
-        m_context.MoveLeftRight(true, BallStateType.SHOW);
+        m_context.MoveLeftRight(true, BallStateType.SHOW,columns);
     }
-    public void Right() 
+    public void Right(int columns) 
     {
         m_context.SetState(BallStateType.TO_RIGHT);
-        m_context.MoveLeftRight(false, BallStateType.SHOW);
+        m_context.MoveLeftRight(false, BallStateType.SHOW,columns);
     }
     public void Up() 
     {
@@ -162,15 +162,15 @@ class BallStateInAir : BallState // Игрок пригнул вверх
     {
         return;
     }
-	public void Left()
+    public void Left(int columns)
 	{
         m_context.SetState(BallStateType.TO_LEFT); // переходим в состояние движения влево
-        m_context.MoveLeftRight(true, BallStateType.IN_AIR); // этот метод создает очередь векторов для движения влево
+        m_context.MoveLeftRight(true, BallStateType.IN_AIR,columns); // этот метод создает очередь векторов для движения влево
 	}
-	public void Right()
+    public void Right(int columns)
 	{
         m_context.SetState(BallStateType.TO_RIGHT); // переходим в состояние движения вправо
-        m_context.MoveLeftRight(false, BallStateType.IN_AIR);  // этот метод создает очередь векторов для движения влево
+        m_context.MoveLeftRight(false, BallStateType.IN_AIR,columns);  // этот метод создает очередь векторов для движения влево
 	}
 	public void Up()
 	{
@@ -230,11 +230,11 @@ class BallStateToDown : BallState // Игрок двигается вниз
     {
         return;
     }
-	public void Left()
+	public void Left(int columns)
 	{
 		return; // при движении вниз влево двигатся не можем
 	}
-	public void Right()
+    public void Right(int columns)
 	{
         return; // при движении вниз вправо двигатся не можем
 	}
@@ -291,11 +291,11 @@ class BallStateToLeft : BallState // Игрок двигается влево
     {
         return;
     }
-    public void Left()
+    public void Left(int columns)
 	{
 		return; // уже двигаемся в лево
 	}
-	public void Right()
+    public void Right(int columns)
 	{
 		return; // вправо двигатся при движении влево не можем
 	}
@@ -358,11 +358,11 @@ class BallStateToRight : BallState // Игрок двигается вправо
     {
         return;
     }
-	public void Left()
+    public void Left(int columns)
 	{
 		return; // при движении вправо влево уже дивигатся не можем
 	}
-	public void Right()
+    public void Right(int columns)
 	{
 		return; // уже и так вправо двигаемся
 	}
@@ -424,15 +424,15 @@ class BallStateJump : BallState // Игрок прыгает на месте
     {
         return;
     }
-	public void Left() // прыгаем влево
+    public void Left(int columns) // прыгаем влево
 	{
         m_context.SetState(BallStateType.TO_LEFT); // переходим в сотояние движение влево
-        m_context.MoveLeftRight(true, BallStateType.JUMP); // двигаем влево
+        m_context.MoveLeftRight(true, BallStateType.JUMP,columns); // двигаем влево
 	}
-	public void Right() // прыжок вправо
+    public void Right(int columns) // прыжок вправо
 	{
         m_context.SetState(BallStateType.TO_RIGHT); // переходим в сотояние движения вправо
-        m_context.MoveLeftRight(false, BallStateType.JUMP);	// двигаем вправо
+        m_context.MoveLeftRight(false, BallStateType.JUMP,columns);	// двигаем вправо
 	}
 	public void Up()
 	{
@@ -532,7 +532,7 @@ public class Ball : MonoBehaviour
 	#endregion
 	public float LeftRightSpeed = 0.05f; // скорость передвижения влево/право
 	public float UpDownSpeed = 0.015f; // скорость движения вверх/вниз
-	public float JumpSpeed = 0.010f; // скорость прыжков
+	private float JumpSpeed = 0.010f; // скорость прыжков
     float m_LeftX = -30.0f; // крайняя левая х координата
     float m_RightX = 30.0f; // крайняя правая х координата
     float m_DownY = -30.0f; // крайняя нижняя у координата    
@@ -656,7 +656,7 @@ public class Ball : MonoBehaviour
 		return true;
 	}
 
-	public void MoveLeftRight(bool left,BallStateType stateFrom)
+    public void MoveLeftRight(bool left, BallStateType stateFrom, int columns)
 	{
 		Vector2 direction = left?m_LeftVector:m_RightVector; // куда двигаемся? влево или вправо
 		m_moveVectors.Clear(); // очищаем очередь движений
@@ -666,19 +666,21 @@ public class Ball : MonoBehaviour
 
 		float len = 0.0f; // длина на которую нужно передвинуть Игрока
         float newX = 0.0f; // новая позиция по Х
+        float addCol = (columns - 1) * m_CellSide;
 		if(left){
-            newX = m_LeftX + (column - 1) * m_CellSide + m_CellSide / 2;
+            newX = m_LeftX + (column - 1) * m_CellSide - addCol + m_CellSide / 2;
 		}
 		else{
-            newX = m_LeftX + (column + 1) * m_CellSide + m_CellSide / 2;
+            newX = m_LeftX + (column + 1) * m_CellSide + addCol + m_CellSide / 2;
 		}
         len = (pos - new Vector2(newX,pos.y)).magnitude;
 
-		int cnt = (int)(len / LeftRightSpeed)+1; // кол-во кадров для передвижения
+        float speed = columns == 1 ? LeftRightSpeed : LeftRightSpeed * 1.5f;
+		int cnt = (int)(len / speed)+1; // кол-во кадров для передвижения
         const float maxX = 1.0f; // макс. знач. Х для расчета траектории по формуле (в масштабе)
 		float d = maxX / cnt; // шаг изм. Х за один кадр в масштабе
 		float x = 0;
-		float y = 0.0f;
+        float y = 0.0f;
 
 		if(!PreLeftRight(stateFrom)){
 			return;
@@ -688,16 +690,23 @@ public class Ball : MonoBehaviour
 		while(cnt > 0)
 		{
             x += d;
-            y = 0.5f*x;
-			//y = x * (1 - x);
-			//y = Mathf.Sin(x);
-			if(x > maxX/2)
-				y = -y;
-			if(x == maxX/2)
-				y = 0;
+            if (columns == 1)
+            {
+                y = 0.5f * x;
+                //y = x * (1 - x);
+                //y = Mathf.Sin(x);
+            }
+            else
+            {
+                y = 0;
+            }
+
+            if (x > maxX / 2)
+                y = -y;
+            if (x == maxX / 2)
+                y = 0;           
 			Vector2 mov = direction+new Vector2(0,y);
             posX += LeftRightSpeed;
-            float speed = LeftRightSpeed;
             if (posX > (pos.x + len))
             {
                 speed = LeftRightSpeed - (posX - (pos.x + len));
@@ -708,7 +717,7 @@ public class Ball : MonoBehaviour
         cnt = (int)(m_CellSide/LeftRightSpeed);
         while(cnt > 0)
         {
-            m_moveVectors.Enqueue(new MoveInfo(m_DownVector, LeftRightSpeed));
+            m_moveVectors.Enqueue(new MoveInfo(m_DownVector, speed));
             cnt--;
         }
 	}
@@ -766,14 +775,14 @@ public class Ball : MonoBehaviour
         }
 	}
 
-    public void LeftKey()
+    public void LeftKey(int columns = 1)
     {
-        m_State.Left();
+        m_State.Left(columns);
     }
 
-    public void RightKey()
-    {       
-        m_State.Right();
+    public void RightKey(int columns = 1)
+    {
+        m_State.Right(columns);
     }
 
     public void UpKey()
@@ -794,13 +803,13 @@ public class Ball : MonoBehaviour
                 if (m_State.type == BallStateType.TO_LEFT)
                 {
                     SetState(BallStateType.JUMP);
-                    LeftKey();
+                    LeftKey(2);
                     return;
                 }
                 if (m_State.type == BallStateType.TO_RIGHT) 
                 {
                     SetState(BallStateType.JUMP);
-                    RightKey();
+                    RightKey(2);
                     return;
                 }                
             break;
