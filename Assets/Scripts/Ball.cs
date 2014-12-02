@@ -522,17 +522,24 @@ public class Ball : MonoBehaviour
         float shift = m_CellSide * columns;
         float halfCell = m_CellSide / 2;
         float newX = transform.position.x + (shift * direction.x);
-        int absNewX = Mathf.Abs((int)newX);
-
-        /*if (absNewX % halfCell == 0)
+        int absIntNewX = Mathf.Abs((int)newX);
+        float absNewX = newX < 0 ? -newX : newX;
+        
+        if (absIntNewX % halfCell == 0)
         {
-            shift -= newX % halfCell;
+            shift = shift - newX % halfCell;
         }
         else
         {
-            shift += halfCell - (newX % halfCell);
-        }*/
-
+            if (direction == rightVector) { 
+                shift = shift + halfCell - (absNewX % halfCell);
+            }
+            else
+            {
+                shift = shift - (halfCell -(absNewX % halfCell));
+            }
+        }
+        
         int cntFrames = (int)(shift / LeftRightSpeed);
         float difShift = shift % LeftRightSpeed;
 
@@ -659,7 +666,7 @@ public class Ball : MonoBehaviour
                         return;
                 }
                 break;
-            case ShelfType.TowardsOn1CellsRight:
+           case ShelfType.TowardsOn1CellsRight:
                 RightKey();
                 break;
             case ShelfType.TowardsOn1CellsLeft:                
