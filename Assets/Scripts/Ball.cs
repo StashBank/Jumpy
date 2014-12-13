@@ -384,7 +384,8 @@ public class Ball : MonoBehaviour
     float m_LeftX = -30.0f; // крайняя левая х координата
     float m_RightX = 30.0f; // крайняя правая х координата
     float m_DownY = -30.0f; // крайняя нижняя у координата    
-    float m_UpY = 30.0f; // крайняя верхняя у координата
+
+  float m_UpY = 30.0f; // крайняя верхняя у координата
     float m_CellSide = 10.0f; // длина стороны ячейки
 
     BallState m_State; // текущее состояние игрока
@@ -413,8 +414,8 @@ public class Ball : MonoBehaviour
     void Start()
     {
         //Camera cam = GameObject.Find("MainCamera").GetComponent<Camera>();
-        m_LeftX = -100.0f;//-cam.ScreenToWorldPoint(new Vector2(Screen.width,0)).x;
-        m_RightX = -m_LeftX;
+        //m_LeftX = -100.0f;//-cam.ScreenToWorldPoint(new Vector2(Screen.width,0)).x;
+        //m_RightX = -m_LeftX;
         m_CellSide = GameInfo.cellSide;
 
         m_moveVector.dist = m_StopVector; //началный вектор движения - стоять на месте.
@@ -461,48 +462,43 @@ public class Ball : MonoBehaviour
 
     bool PreLeftRight(BallStateType stateFrom) // функция предварительных расчетов перед полетом влево или право
     {
-        Vector2 pos = new Vector2(transform.position.x, transform.position.y); // теущая позиция игрока
-        float H = pos.y + m_UpY; // сдвиг координатной сетки на позиции (0,0).
-        int level = (int)(H / m_CellSide); // текущий уровень игрока (0 - первый).
-        float h = m_CellSide * level; // У координата полки текущего уровня
-        float hH = H - h; // позиция по У Игрока относительно полки
-        float moveLen = 0; // растояние сдвига игрока небоходимое для переноса в центр ячейки (иницализировано в 0)
-        Vector2 movVector = upVector; // вектор для направления сдвига (инициализировано в вектор- вверх)
         float halfCell = m_CellSide / 2;
-        if (hH > halfCell)
-        { // если позиция Игрока относительно полки больше половины ячейки
-            if (stateFrom != BallStateType.JUMP) // если Игрок не в состоянии прыжка
-            {
-                if (!ObstacleCheck()) // если нет приград сверху (т.к. при движении Игрок окажется на сл уровне
-                {
-                    moveLen = m_CellSide * 1.5f - hH; // растояние на которое нужно сдвинуть игрока - выстоа ячейки + пол следующей ячейки и минус его позиция отосительно текущей полки
-                }
-                else
-                {
-                    SetState(BallStateType.IN_AIR); // иначе продолжаем движение вверх
-                    return false;
-                }
-            }
-            else
-            {
-                movVector = downVector; // если игрок в состоянии прижков. не логично двигать его до сл. уровня
-                moveLen = halfCell - hH; // поетому сдвигамем его вниз к центру ячейки.
-            }
-        }
-
-        if (hH < halfCell)
-        { // если игрок ниже чем середина ячейки
-            moveLen = halfCell - hH; // сдвигаем игрока вверх до средины текущей ячейки
-        }
-
-        if (moveLen > 0) // если Игрока нужно сдвинуть
+        float y = transform.position.y;
+        int absIntY = Mathf.Abs((int)y);
+        float shift = 0;
+        int direct = -1;//(shift > halfCell) ? -1 : 1;
+        int realY = (int)(y);
+        float downDek = 0; 
+        if (y>0)
         {
-            int N = (int)(moveLen / LeftRightSpeed); // кол-во необходимых кадров для передвижения
-            while (N > 0) // пока есть кадры
-            {
-                m_moveVectors.Enqueue(new MoveInfo(movVector, LeftRightSpeed)); // ложим в очередь инфу о движении
-                N--; //уменьшаем кол-во необходимых кадров
-            }
+            downDek = (int)(realY / m_CellSide) * m_CellSide;
+        }
+        else
+        {
+            downDek = (int)(realY / m_CellSide) * m_CellSide - m_CellSide;
+        }
+        print("Y = " + y);
+        print("DownDek "+downDek);
+        if (y>downDek+halfCell)
+        {
+            shift = y-(downDek+halfCell);
+            direct = -1;
+        }
+        else
+        {
+            shift = (downDek + halfCell) - y;
+            direct = 1;
+        }
+        print("shift " + shift);
+        print("direct = "+direct);
+        float difShift = shift % LeftRightSpeed;
+        print("difShift = " + difShift);
+        int cntFrames = (int)(shift / LeftRightSpeed);
+        while (cntFrames > 0)
+        {
+            m_moveVectors.Enqueue(new MoveInfo(new Vector2(0,direct), LeftRightSpeed));
+            
+            cntFrames--;
         }
 
         return true;
@@ -517,6 +513,7 @@ public class Ball : MonoBehaviour
         {
             return;
         }
+        print(moveVectors.Count);
         Vector2 direction = left ? leftVector : rightVector;
 
         float shift = m_CellSide * columns;
@@ -542,17 +539,31 @@ public class Ball : MonoBehaviour
         
         int cntFrames = (int)(shift / LeftRightSpeed);
         float difShift = shift % LeftRightSpeed;
-
-        while (cntFrames > 0)
+        
+        float y = 0;
+        float x = 0;
+        const float maxX = 1.0f;
+        float d = maxX / cntFrames;
+        
+        while (cntFrames > 0)  // обработка движения влево/вправо по кадрам
         {
-            m_moveVectors.Enqueue(new MoveInfo(direction, LeftRightSpeed));
+            x += d;
+            y = 0.5f * x;
+            if (x > maxX / 2)
+                y = -y;
+            if (x == maxX / 2)
+                y = 0;
+            Vector2 mov = new Vector2(direction.x, y);
+
+            //m_moveVectors.Enqueue(new MoveInfo(direction, LeftRightSpeed));
+            m_moveVectors.Enqueue(new MoveInfo(mov, LeftRightSpeed));
             cntFrames--;
         }
-        m_moveVectors.Enqueue(new MoveInfo(direction, difShift));
+        m_moveVectors.Enqueue(new MoveInfo(direction, difShift));  // движение корректировки
 
         cntFrames = (int)(m_CellSide / LeftRightSpeed);
-
-        while (cntFrames > 0)
+        
+        while (cntFrames > 0) // для возвращения стейта даун для мячика (чтобы работали полки)
         {
             m_moveVectors.Enqueue(new MoveInfo(downVector, LeftRightSpeed));
             cntFrames--;
