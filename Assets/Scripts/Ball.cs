@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using System.IO;
 
 #region States
 
@@ -381,11 +382,6 @@ public class Ball : MonoBehaviour
     public float LeftRightSpeed = 0.05f; // скорость передвижения влево/право
     public float UpDownSpeed = 0.015f; // скорость движения вверх/вниз
     public float JumpSpeed = 0.010f; // скорость прыжков
-    float m_LeftX = -30.0f; // крайняя левая х координата
-    float m_RightX = 30.0f; // крайняя правая х координата
-    float m_DownY = -30.0f; // крайняя нижняя у координата    
-
-  float m_UpY = 30.0f; // крайняя верхняя у координата
     float m_CellSide = 10.0f; // длина стороны ячейки
 
     BallState m_State; // текущее состояние игрока
@@ -413,6 +409,7 @@ public class Ball : MonoBehaviour
     // Use this for initialization
     void Start()
     {
+        ClearDebugLog();
         //Camera cam = GameObject.Find("MainCamera").GetComponent<Camera>();
         //m_LeftX = -100.0f;//-cam.ScreenToWorldPoint(new Vector2(Screen.width,0)).x;
         //m_RightX = -m_LeftX;
@@ -429,77 +426,135 @@ public class Ball : MonoBehaviour
         m_States[BallStateType.TO_RIGHT] = new BallStateToRight(this);
         m_States[BallStateType.JUMP] = new BallStateJump(this);
         SetState(BallStateType.SHOW); // начальное состоянние. (можно продумать инициализ. при старте)
+        
+        //DebugLog(string.Format("Test min multi[le of {0} and {1}: {2}",34.5f,10,MinMultiple(34.5f,10)));
+        //DebugLog(string.Format("Test min multi[le of {0} and {1}: {2}",38.5f,10,MinMultiple(38.5f,10)));
+
+        //DebugLog(string.Format("Test max multi[le of {0} and {1}: {2}", 34.5f, 10, MaxMultiple(34.5f, 10)));
+        //DebugLog(string.Format("Test max multi[le of {0} and {1}: {2}", 38.5f, 10, MaxMultiple(38.5f, 10)));
+        //DebugLog(string.Format("test sign -23,5: {0}", Sign(-23.5f)));
+        //DebugLog(string.Format("test sign 23,5: {0}", Sign(23.5f)));        
+    }
+
+    int MinMultiple(float number,int multiply)
+    {
+        return (int)(number / multiply) * multiply;
+    }
+    
+    int MaxMultiple(float number,int multiply)
+    {
+        return multiply * ((int)(number / multiply) + 1);
+    }
+
+    int Sign(float number)
+    {
+        return (number > 0) ? 1 : -1;
+    }
+
+    void DebugLog(string msg)
+    {
+        File.AppendAllText("debug.log",msg+"\n");
+    }
+
+    void ClearDebugLog()
+    {
+        File.WriteAllText("debug.log", "");
     }
 
     bool ObstacleCheck() // функция проверки преграды сверху
     {
         float x = transform.position.x; //текущая позиция по х
         float y = transform.position.y; // текущая позиция по у
-        int level = (int)((y + m_RightX) / m_CellSide) + 1; // расчет текущего уровня по высоте (строка). 
-        /* смещаем у на значение нижнего у поля. таким образом переместив координатную сетку к позиции 0,0 камеры
-         * делим на высоту (сторону) нашей ячейки и узнаем текущий уровень. в данном случаее 0 это первый.
-         * тоесть если у менее высоты то в р-те деления и приведения к целому будет 0. 
-         * прибавив к рез-ту 1 узнаем номер этажа на котором находится игрок.
-         */
-        int column = (int)((x + 30.0f) / m_CellSide); // расчет текущей кололонки в которой находится игрок
-        /* смещаем х на значение левого х поля. таким образом переместив координатную сетку к позиции 0,0 камеры
-         * делим на ширина (сторону) нашей ячейки и узнаем текущую колонку. в данном случаее 0 это первая.         
-         */
-        float Y = m_DownY + (m_CellSide * level); // значение У координаты следующего уровня.
-        //(к нижнему значению у добавляем сумму высот всех ячеек до текущего уровня)
-        float X = m_LeftX + (10.0f * column); // значение х координаты текущей колонки
-        // к крайнему левому значению х добавляем сумму всех колонок до текущей
+        float absY = Mathf.Abs(y);
+        float absX = Mathf.Abs(x);
+        float upDek = MinMultiple(absY, (int)m_CellSide) * Sign(y);
+        float leftDek = MinMultiple(absX, (int)m_CellSide) * Sign(x);
+        float rightDek = MinMultiple(absX, (int)m_CellSide) * Sign(x);
 
         foreach (MonoBehaviour s in m_Shelfs) // перебираем все полочки на сцене
         {
             float pY = s.transform.position.y; // значение У полки
             float pX = s.transform.position.x; // значение Х полки
-            if (pY >= Y && pX >= X && pX <= (X + 10)) // если полка находится уровнем выше чем игрок и находится в той же колонке что игрок
+            if (pY >= upDek && pX >= leftDek && pX <= rightDek) // если полка находится на 1 уровнь выше чем игрок и находится в той же колонке что игрок
                 return true; // возвращаем истину
         }
         return false;
     }
 
     bool PreLeftRight(BallStateType stateFrom) // функция предварительных расчетов перед полетом влево или право
-    {
+    {       
+
         float halfCell = m_CellSide / 2;
         float y = transform.position.y;
-        int absIntY = Mathf.Abs((int)y);
-        float shift = 0;
-        int direct = -1;//(shift > halfCell) ? -1 : 1;
-        int realY = (int)(y);
-        float downDek = 0; 
-        if (y>0)
+        float x = transform.position.x;
+        float shiftY = 0,shiftX = 0;
+        int directY = 0,directX = 0;
+        float absY = Mathf.Abs(y), absX = Mathf.Abs(x);
+        float downDek = 0, leftDek = 0;
+
+        DebugLog(string.Format("\nStart prepare (x = {0},y = {1}):", x, y));
+
+        //downDek = (y > 0) ? MinMultiple(absY, (int)m_CellSide) : MinMultiple(absY, (int)m_CellSide);
+        downDek = MinMultiple(absY, (int)m_CellSide);
+        leftDek = MinMultiple(absX, (int)m_CellSide);        
+        shiftY = (downDek + halfCell) - absY;        
+        shiftX = (leftDek + halfCell) - absX;
+        directY = (shiftY > 0) ? 1 : -1;
+        directY *= (y >= 0) ? 1 : -1;
+        directX = (shiftX > 0) ? 1 : -1;
+        directX = (x > 0) ? 1 : -1;
+
+        DebugLog(string.Format("State from: {0}", stateFrom.ToString()));
+
+        shiftY = Mathf.Abs(shiftY);
+        shiftX = Mathf.Abs(shiftX);
+
+        if (stateFrom == BallStateType.IN_AIR)
         {
-            downDek = (int)(realY / m_CellSide) * m_CellSide;
+            if (absY > (downDek + 1.25f * halfCell))
+            {
+                if (ObstacleCheck())
+                {
+                    DebugLog("Not ok");
+                    return false;                
+                }
+                shiftY = m_CellSide - shiftY;
+                directY *= -1;
+            }
+            DebugLog("ok");
         }
-        else
-        {
-            downDek = (int)(realY / m_CellSide) * m_CellSide - m_CellSide;
-        }
-        print("Y = " + y);
-        print("DownDek "+downDek);
-        if (y>downDek+halfCell)
-        {
-            shift = y-(downDek+halfCell);
-            direct = -1;
-        }
-        else
-        {
-            shift = (downDek + halfCell) - y;
-            direct = 1;
-        }
-        print("shift " + shift);
-        print("direct = "+direct);
-        float difShift = shift % LeftRightSpeed;
-        print("difShift = " + difShift);
-        int cntFrames = (int)(shift / LeftRightSpeed);
+
+        DebugLog(string.Format("Down deck:{0}", downDek));
+        DebugLog(string.Format("Left deck:{0}", leftDek));
+        DebugLog(string.Format("Shift Y:{0}", shiftY));
+        DebugLog(string.Format("Shift X:{0}", shiftX));
+        DebugLog(string.Format("Direct Y:{0}", directY));
+        DebugLog(string.Format("Direct X:{0}", directX));       
+        
+
+        float difShift = shiftY % LeftRightSpeed;
+        int cntFrames = (int)(shiftY / LeftRightSpeed);
+        //cntFrames = 1;
         while (cntFrames > 0)
         {
-            m_moveVectors.Enqueue(new MoveInfo(new Vector2(0,direct), LeftRightSpeed));
-            
+            m_moveVectors.Enqueue(new MoveInfo(new Vector2(0, directY), LeftRightSpeed));
+            //m_moveVectors.Enqueue(new MoveInfo(new Vector2(0, directY), shiftY));
             cntFrames--;
         }
+        m_moveVectors.Enqueue(new MoveInfo(new Vector2(0, directY), difShift));
+
+        difShift = shiftX % LeftRightSpeed;
+        cntFrames = (int)(shiftX / LeftRightSpeed);
+        cntFrames = 1;
+        while (cntFrames > 0)
+        {
+            m_moveVectors.Enqueue(new MoveInfo(new Vector2(0, directX), LeftRightSpeed));
+            m_moveVectors.Enqueue(new MoveInfo(new Vector2(directX, 0), shiftX));            
+            cntFrames--;
+        }
+        //m_moveVectors.Enqueue(new MoveInfo(new Vector2(0, directX), difShift));
+
+        DebugLog(string.Format("End prepare (newX={0},newY={1})\n", x + (Mathf.Abs(shiftX) * directX), y + (Mathf.Abs(shiftY) * directY)));
 
         return true;
     }
@@ -509,60 +564,39 @@ public class Ball : MonoBehaviour
         m_moveVectors.Clear(); // очищаем очередь движений
         m_moveBackVectors.Clear(); // очищаем очередь обратных движений
 
-        if (!PreLeftRight(stateFrom))
+        if(!PreLeftRight(stateFrom))
         {
             return;
         }
-        print(moveVectors.Count);
+        
         Vector2 direction = left ? leftVector : rightVector;
 
         float shift = m_CellSide * columns;
-        float halfCell = m_CellSide / 2;
-        float newX = transform.position.x + (shift * direction.x);
-        int absIntNewX = Mathf.Abs((int)newX);
-        float absNewX = newX < 0 ? -newX : newX;
-        
-        if (absIntNewX % halfCell == 0)
-        {
-            shift = shift - newX % halfCell;
-        }
-        else
-        {
-            if (direction == rightVector) { 
-                shift = shift + halfCell - (absNewX % halfCell);
-            }
-            else
-            {
-                shift = shift - (halfCell -(absNewX % halfCell));
-            }
-        }
-        
         int cntFrames = (int)(shift / LeftRightSpeed);
         float difShift = shift % LeftRightSpeed;
-        
+
         float y = 0;
         float x = 0;
         const float maxX = 1.0f;
         float d = maxX / cntFrames;
-        
+
         while (cntFrames > 0)  // обработка движения влево/вправо по кадрам
         {
             x += d;
-            y = 0.5f * x;
+            y = x * (1 - x) * 1.75f;
             if (x > maxX / 2)
                 y = -y;
             if (x == maxX / 2)
                 y = 0;
             Vector2 mov = new Vector2(direction.x, y);
 
-            //m_moveVectors.Enqueue(new MoveInfo(direction, LeftRightSpeed));
             m_moveVectors.Enqueue(new MoveInfo(mov, LeftRightSpeed));
             cntFrames--;
         }
         m_moveVectors.Enqueue(new MoveInfo(direction, difShift));  // движение корректировки
 
         cntFrames = (int)(m_CellSide / LeftRightSpeed);
-        
+
         while (cntFrames > 0) // для возвращения стейта даун для мячика (чтобы работали полки)
         {
             m_moveVectors.Enqueue(new MoveInfo(downVector, LeftRightSpeed));
@@ -657,7 +691,7 @@ public class Ball : MonoBehaviour
         BallStateType stateFrom = m_State.type;
         SetState(BallStateType.JUMP);
         bool anyKey = Input.anyKey; // если нажата любая кнопка
-        if(Input.GetKey(KeyCode.DownArrow))
+        if (Input.GetKey(KeyCode.DownArrow))
             anyKey = false;
         switch (shelfType)
         {
@@ -677,10 +711,10 @@ public class Ball : MonoBehaviour
                         return;
                 }
                 break;
-           case ShelfType.TowardsOn1CellsRight:
+            case ShelfType.TowardsOn1CellsRight:
                 RightKey();
                 break;
-            case ShelfType.TowardsOn1CellsLeft:                
+            case ShelfType.TowardsOn1CellsLeft:
                 LeftKey();
                 break;
         }
