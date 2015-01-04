@@ -15,6 +15,11 @@ public class Menu : MonoBehaviour {
 	}
     public void StartGame()
     {
-        Application.LoadLevel("game");
+        Application.LoadLevel("Mission_Menu");
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 }

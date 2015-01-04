@@ -14,6 +14,7 @@ public class FloorExit : MonoBehaviour {
 	}
     void OnTriggerEnter2D(Collider2D inCollider)
     {
-        Application.LoadLevel("Start");
+        Application.LoadLevel("Mission_Menu");
+        
     }
 }

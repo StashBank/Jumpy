@@ -133,7 +133,7 @@ public class Controls : MonoBehaviour {
         }
         if (Input.GetKeyUp(KeyCode.Escape))
         {
-            Application.Quit();
+            //Application.Quit();
         }
 	}
 
