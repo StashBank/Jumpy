@@ -69,7 +69,15 @@ public class Exit : MonoBehaviour {
 	}
     void OnTriggerEnter2D(Collider2D inCollider)
     {
-        m_State.OnTrigger();
+        if (gameObject.transform.name.ToString() == "Exit")
+        {
+            m_State.OnTrigger();
+        }
+        else
+        {
+            PlayerPrefs.SetInt(Application.loadedLevelName, 1);
+            Application.LoadLevel("Mission_Menu");
+        }
     }
 
     public void SetState(ExitStateTytpes type)

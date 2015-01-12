@@ -6,6 +6,7 @@ public class Levels : MonoBehaviour
 {
 
     Queue<GameObject> m_levels = new Queue<GameObject>();
+    Queue<Heart> hearts = new Queue<Heart>();
     List<Key> m_keys = new List<Key>();
     List<MonoBehaviour> m_shelfs = new List<MonoBehaviour>();
     public Ball Ball;
@@ -13,7 +14,7 @@ public class Levels : MonoBehaviour
     GameObject m_currentLevel;
     Exit m_exit;
     float m_H = 60.0f;
-    float m_W = 55.0f;
+    float m_W = 50.0f;
 
     Queue<MoveInfo> m_MoveInfo = new Queue<MoveInfo>();
     public float Speed = 0.5f;
@@ -33,10 +34,12 @@ public class Levels : MonoBehaviour
         toNextLevel = true;
         m_ball.SetState(BallStateType.HIDE);
 
-        int cnt = (int)(m_W / Speed);
+        int cnt = (int)(m_W / Speed)-60;
         //float dif = m_H % Speed;
         float dif = m_W % Speed;
+        print(cnt);
         while (cnt > 0)
+            
         {
             m_MoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), Speed));
             cnt--;
@@ -62,6 +65,8 @@ public class Levels : MonoBehaviour
         else
             m_ball = GameObject.Find("Ball").GetComponent<Ball>();
 
+        PlayerPrefs.SetFloat("levelPositionX", m_ball.transform.position.x);
+        PlayerPrefs.SetFloat("levelPositionY", m_ball.transform.position.y);
         Transform[] levels = GameObject.Find("Levels").GetComponentsInChildren<Transform>();
         foreach (Transform item in levels)
         {
@@ -70,8 +75,27 @@ public class Levels : MonoBehaviour
             {
                 m_levels.Enqueue(obj);
             }            
-        }        
+        }
+
+        Transform[] heartList = GameObject.Find("Life").GetComponentsInChildren<Transform>();
+        foreach (Transform item in heartList)
+        {
+            GameObject obj = item.gameObject;
+            if (obj.ToString().Contains("heart"))
+            {
+                hearts.Enqueue(obj.gameObject.GetComponent<Heart>());
+            }
+        }
+        foreach (Heart heart in hearts)
+        {
+            heart.renderer.enabled = true;
+        }
         NextLevel();
+    }
+
+    void temp_tryExit(FloorExit sender)
+    {
+        throw new System.NotImplementedException();
     }
 
     void NextLevel()
@@ -108,10 +132,13 @@ public class Levels : MonoBehaviour
             if (item.ToString().IndexOf("StartBallPosition") >= 0)
             {
                 m_ball.transform.position = item.position;
+                PlayerPrefs.SetFloat("levelPositionX", item.position.x);
+                PlayerPrefs.SetFloat("levelPositionY", item.position.y);
             }
         }
         m_ball.Shelfs = m_shelfs;
         m_ball.SetState(BallStateType.SHOW);
+        
     }
     // Update is called once per frame
     void Update()
@@ -133,6 +160,12 @@ public class Levels : MonoBehaviour
                 NextLevel();
                 toNextLevel = false;
             }
-        }        
+        }
+        if (PlayerPrefs.GetInt("lives") < hearts.Count)
+        {
+            hearts.Peek().renderer.enabled = false;
+            hearts.Dequeue();
+        }
+        
     }
 }

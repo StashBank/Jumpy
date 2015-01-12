@@ -1,0 +1,46 @@
+Initialize engine version: 4.6.0b20 (a3ecf55f1347)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: AMD Radeon HD 7520G (ID=0x9990)
+    Vendor:   ATI
+    VRAM:     753 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-CSharp-firstpass.dll (this message is harmless)
+Loading C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-CSharp-firstpass.dll into Unity Child Domain
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-UnityScript-firstpass.dll (this message is harmless)
+Loading C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-UnityScript-firstpass.dll into Unity Child Domain
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-UnityScript.dll (this message is harmless)
+Loading C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\Assembly-UnityScript.dll into Unity Child Domain
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+- Completed reload, in  0.100 seconds
+desktop: 1366x768 60Hz; virtual: 1366x768 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: C:\Users\suzui.d\Desktop\Game Projects\JumpyEscape\Jumpy\Jumpy\YAYAYA_Data\Managed\System.dll (this message is harmless)
+UnloadTime: 6.849819 ms
+Unloading 4 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
+
+Unloading 4 unused Assets to reduce memory usage. Loaded Objects now: 272.
+Total: 1.932068 ms (FindLiveObjects: 0.019757 ms CreateObjectMapping: 0.015578 ms MarkObjects: 0.202135 ms  DeleteObjects: 0.014438 ms)
+
+2
+ 
+(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+
+old ball pos (-25.0, 21.3, 0.0)
+ 
+(Filename: C:/BuildAgent/work/d63dfc6385190b60/artifacts/StandalonePlayerGenerated/UnityEngineDebug.cpp Line: 49)
+
+UnloadTime: 0.514458 ms
+Unloading 1 Unused Serialized files (Serialized files now loaded: 0 / Dirty serialized files: 0)
+
+Unloading 5 unused Assets to reduce memory usage. Loaded Objects now: 521.
+Total: 1.937388 ms (FindLiveObjects: 0.034575 ms CreateObjectMapping: 0.018997 ms MarkObjects: 0.213914 ms  DeleteObjects: 0.018617 ms)
+
