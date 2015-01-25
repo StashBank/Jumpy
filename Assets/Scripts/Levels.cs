@@ -34,12 +34,12 @@ public class Levels : MonoBehaviour
         toNextLevel = true;
         m_ball.SetState(BallStateType.HIDE);
 
-        int cnt = (int)(m_W / Speed)-60;
+        //int cnt = (int)(m_W / Speed) - 60;
+        int cnt = (int)(m_W / Speed);
         //float dif = m_H % Speed;
         float dif = m_W % Speed;
         print(cnt);
         while (cnt > 0)
-            
         {
             m_MoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), Speed));
             cnt--;
@@ -57,7 +57,7 @@ public class Levels : MonoBehaviour
     void Start()
     {
         Camera cam = GameObject.Find("MainCamera").GetComponent<Camera>();
-        m_H = cam.ScreenToWorldPoint(new Vector2(Screen.width,Screen.height)).y * 2;
+        m_H = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).y * 2;
         m_W = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).x * 2;
         m_W -= (m_W % GameInfo.cellSide);
         if (Ball != null)
@@ -74,12 +74,13 @@ public class Levels : MonoBehaviour
             if (obj.ToString().IndexOf("Level_") >= 0)
             {
                 m_levels.Enqueue(obj);
-            }            
+            }
         }
         GameObject life = GameObject.Find("Life");
         if (life != null)
         {
-            Transform[] heartList = life.GetComponentsInChildren<Transform>();        
+            List<Transform> heartList = new List<Transform>(life.GetComponentsInChildren<Transform>());
+            heartList.Reverse();
             foreach (Transform item in heartList)
             {
                 GameObject obj = item.gameObject;
@@ -141,12 +142,12 @@ public class Levels : MonoBehaviour
         }
         m_ball.Shelfs = m_shelfs;
         m_ball.SetState(BallStateType.SHOW);
-        
+
     }
     // Update is called once per frame
     void Update()
     {
-        if (toNextLevel) 
+        if (toNextLevel)
         {
             if (m_MoveInfo.Count > 0)
             {
@@ -169,6 +170,6 @@ public class Levels : MonoBehaviour
             hearts.Peek().renderer.enabled = false;
             hearts.Dequeue();
         }
-        
+
     }
 }
