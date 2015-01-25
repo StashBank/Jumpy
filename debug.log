@@ -1,0 +1,33 @@
+
+Start prepare (x = 5,y = 5):
+State from: SHOW
+Down deck:0
+Left deck:0
+Shift Y:0
+Shift X:0
+Direct Y:-1
+Direct X:1
+End prepare (newX=5,newY=5)
+
+
+Start prepare (x = 15,y = 4.66851):
+State from: JUMP
+Down deck:0
+Left deck:10
+Shift Y:0.3314896
+Shift X:1.907349E-06
+Direct Y:1
+Direct X:1
+End prepare (newX=15,newY=5)
+
+
+Start prepare (x = 25,y = -16.33163):
+State from: JUMP
+Down deck:10
+Left deck:20
+Shift Y:1.331627
+Shift X:3.814697E-06
+Direct Y:1
+Direct X:1
+End prepare (newX=25,newY=-15)
+

@@ -76,19 +76,22 @@ public class Levels : MonoBehaviour
                 m_levels.Enqueue(obj);
             }            
         }
-
-        Transform[] heartList = GameObject.Find("Life").GetComponentsInChildren<Transform>();
-        foreach (Transform item in heartList)
+        GameObject life = GameObject.Find("Life");
+        if (life != null)
         {
-            GameObject obj = item.gameObject;
-            if (obj.ToString().Contains("heart"))
+            Transform[] heartList = life.GetComponentsInChildren<Transform>();        
+            foreach (Transform item in heartList)
             {
-                hearts.Enqueue(obj.gameObject.GetComponent<Heart>());
+                GameObject obj = item.gameObject;
+                if (obj.ToString().Contains("heart"))
+                {
+                    hearts.Enqueue(obj.gameObject.GetComponent<Heart>());
+                }
             }
-        }
-        foreach (Heart heart in hearts)
-        {
-            heart.renderer.enabled = true;
+            foreach (Heart heart in hearts)
+            {
+                heart.renderer.enabled = true;
+            }
         }
         NextLevel();
     }
