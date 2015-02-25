@@ -13,8 +13,8 @@ public class Levels : MonoBehaviour
     Ball m_ball;
     GameObject m_currentLevel;
     Exit m_exit;
-    float m_H = 60.0f;
-    float m_W = 50.0f;
+    float m_H = 0.0f;
+    float m_W = 0.0f;
 
     Queue<MoveInfo> m_MoveInfo = new Queue<MoveInfo>();
     public float Speed = 0.5f;
@@ -58,8 +58,9 @@ public class Levels : MonoBehaviour
     {
         Camera cam = GameObject.Find("MainCamera").GetComponent<Camera>();
         m_H = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).y * 2;
-        m_W = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).x * 2;
-        m_W -= (m_W % GameInfo.cellSide);
+        //m_W = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).x * 2;
+        //m_W -= (m_W % GameInfo.cellSide);
+        m_W = 10* GameInfo.cellSide;
         if (Ball != null)
             m_ball = Ball;
         else
