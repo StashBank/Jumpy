@@ -25,7 +25,7 @@ public class Controls : MonoBehaviour {
         foreach (Transform item in arrows)
         {
             Vector2 pos = item.position; //позиция кнопки
-            Vector2 rect = item.renderer.bounds.size; //размер кнопки
+            Vector2 rect = item.GetComponent<Renderer>().bounds.size; //размер кнопки
             pos.x -= rect.x/2; //т.к. позиция в центре объекта то сдвигаем значения влево и вверх до угла
             pos.y -= rect.y/2;
             switch (item.name) //инициализация пространства кнопки (место где будет проверятся клик мыши)
@@ -106,7 +106,7 @@ public class Controls : MonoBehaviour {
             }
             //joystickPoint.Translate(newJoystickPointPos);
             */
-            mousePosV2 = camera.ScreenToWorldPoint(mousePosV2);
+            mousePosV2 = GetComponent<Camera>().ScreenToWorldPoint(mousePosV2);
 
             if (ButtonLeftRect.Contains(mousePosV2))
             {

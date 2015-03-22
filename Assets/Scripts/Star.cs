@@ -24,7 +24,7 @@ class StarStateHide : StarState
     public StarStateHide(Star context)
     {
         m_context = context;
-        m_context.renderer.enabled = false;
+        m_context.GetComponent<Renderer>().enabled = false;
     }
     public override void OnTrigger()
     {
@@ -42,7 +42,7 @@ class StarStateShow : StarState
     public StarStateShow(Star context)
     {
         m_context = context;
-        m_context.renderer.enabled = true;
+        m_context.GetComponent<Renderer>().enabled = true;
     }
     public override void OnTrigger()
     {

@@ -585,7 +585,7 @@ public class Ball : MonoBehaviour
         transform.Translate(moveInfo.dist * moveInfo.speed); // двигаем игрока        
         moveInfo.dist.x *= -1; //меняем направление по х на противоположное
         moveInfo.dist.y *= -1; //меняем направление по у на противоположное
-        m_moveBackVectors.Push(moveInfo); // ложим в стек инфо про посл. движение игрока
+        m_moveBackVectors.Push(moveInfo); // ложим в стек инфо про посл. движение игрока        
     }
     public void FromWallToShelf()
     {
@@ -693,6 +693,12 @@ public class Ball : MonoBehaviour
                 break;
             case ShelfType.TowardsOn1CellsLeft:
                 LeftKey();
+                break;
+            case ShelfType.TowardsOn2CellsLeft:
+                LeftKey(2);
+                break;
+            case ShelfType.TowardsOn2CellsRight:
+                RightKey(2);
                 break;
         }
         //SetState(BallStateType.JUMP);

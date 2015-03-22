@@ -21,7 +21,7 @@ class ExitStateHide : ExitState
     }
     public void UpdateParameters()
     {
-        m_context.renderer.enabled = false;
+        m_context.GetComponent<Renderer>().enabled = false;
     }
     public override string ToString()
     {
@@ -41,7 +41,7 @@ class ExitStateShow : ExitState
     }
     public void UpdateParameters()
     {
-        m_context.renderer.enabled = true;
+        m_context.GetComponent<Renderer>().enabled = true;
     }
     public override string ToString()
     {

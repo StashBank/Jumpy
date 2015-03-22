@@ -20,8 +20,16 @@ public class Levels : MonoBehaviour
     public float Speed = 0.5f;
     bool toNextLevel = false;
 
+    public GameObject backGround;
+    Queue<MoveInfo> m_backGroundMoveInfo = new Queue<MoveInfo>();
+    int levelNum = 0;
+    float _timer = 0;
+    const int SECONDS_IN_HOUR = 3600;
+    const int SECONDS_IN_MINUTE = 60;
+    int Points = 0;
     void OnKeyGet(Key sender)
     {
+        Points++;
         m_keys.Remove(sender);
         if (m_keys.Count == 0)
         {
@@ -38,7 +46,7 @@ public class Levels : MonoBehaviour
         int cnt = (int)(m_W / Speed);
         //float dif = m_H % Speed;
         float dif = m_W % Speed;
-        print(cnt);
+
         while (cnt > 0)
         {
             m_MoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), Speed));
@@ -46,6 +54,18 @@ public class Levels : MonoBehaviour
         }
         m_MoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), dif));
 
+        if (backGround != null)
+        {
+            float speed = Speed * 0.45f;
+            cnt = (int)(m_W / speed);
+            dif = m_W % speed;
+            while (cnt > 0)
+            {
+                m_backGroundMoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), speed));
+                cnt--;
+            }
+            m_backGroundMoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), dif));
+        }
         /*foreach (GameObject item in m_levels)
         {
             item.transform.Translate(new Vector3(0, -m_H, 0));
@@ -53,9 +73,41 @@ public class Levels : MonoBehaviour
         Destroy(m_currentLevel.gameObject);
         NextLevel();*/
     }
+
+    
+    void OnGUI()
+    {
+        string levelCaption = "Level " + levelNum;
+        GUIStyle style = new GUIStyle();
+        style.border = new RectOffset(0, 0, 0, 0);
+        style.fontSize = 24;
+        GUI.Box(new Rect(420,20,60,30),levelCaption,style);
+
+        _timer += Time.deltaTime;
+        int timer = (int)_timer;
+        //System.DateTime time = new System.DateTime(0, 0, 0, 0, 0, timer,0);
+        int hours = (int)timer / SECONDS_IN_HOUR;
+        timer %= SECONDS_IN_HOUR;
+        int minutes = (int)timer / SECONDS_IN_MINUTE;
+        timer %= SECONDS_IN_MINUTE;
+        int seconds = (int)timer;
+        string displayTime = string.Format("{0}:{1}:{2}", 
+            (hours > 9) ? hours.ToString() : "0" + hours.ToString(), 
+            (minutes > 9) ? minutes.ToString() : "0" + minutes.ToString(),
+            (seconds > 9) ? seconds.ToString() : "0" + seconds.ToString()
+            );
+        GUI.Box(new Rect(120, 20, 60, 30), displayTime, style);
+
+        GUI.Box(new Rect(650, 20, 60, 30), Points.ToString(), style);
+    }
+
     // Use this for initialization
     void Start()
     {
+        if (backGround == null)
+        {
+            backGround = GameObject.Find("background1");
+        }
         Camera cam = GameObject.Find("MainCamera").GetComponent<Camera>();
         m_H = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).y * 2;
         //m_W = cam.ScreenToWorldPoint(new Vector2(Screen.width, Screen.height)).x * 2;
@@ -92,7 +144,7 @@ public class Levels : MonoBehaviour
             }
             foreach (Heart heart in hearts)
             {
-                heart.renderer.enabled = true;
+                heart.GetComponent<Renderer>().enabled = true;
             }
         }
         NextLevel();
@@ -109,6 +161,7 @@ public class Levels : MonoBehaviour
             return;
         m_currentLevel = m_levels.Dequeue();
         m_shelfs.Clear();
+        levelNum++;
         Transform[] currentLevelTransforms = m_currentLevel.GetComponentsInChildren<Transform>();
         foreach (Transform item in currentLevelTransforms)
         {
@@ -150,6 +203,12 @@ public class Levels : MonoBehaviour
     {
         if (toNextLevel)
         {
+            if (m_backGroundMoveInfo.Count > 0)
+            {
+                MoveInfo move = m_backGroundMoveInfo.Dequeue();
+                backGround.transform.Translate(move.dist * move.speed);
+            }
+
             if (m_MoveInfo.Count > 0)
             {
                 MoveInfo move = m_MoveInfo.Dequeue();
@@ -168,7 +227,7 @@ public class Levels : MonoBehaviour
         }
         if (PlayerPrefs.GetInt("lives") < hearts.Count)
         {
-            hearts.Peek().renderer.enabled = false;
+            hearts.Peek().GetComponent<Renderer>().enabled = false;
             hearts.Dequeue();
         }
 
