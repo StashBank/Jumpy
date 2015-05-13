@@ -4,324 +4,328 @@ using System.Collections.Generic;
 using System.Threading;
 using System.IO;
 
-#region States
 
-public enum BallStateType { SHOW, HIDE, IN_AIR, TO_DOWN, TO_LEFT, TO_RIGHT, JUMP } //Типы состояния.
-public struct MoveInfo // Структура для хранения информации о передвижении игрока
-{
-    public MoveInfo(Vector2 v, float f) { dist = v; speed = f; }
-    public Vector2 dist; // Направление движения
-    public float speed; // Растояние которое пройдет игрок за один фрейм (кадр)
-}
-
-abstract class BallState // Общий интерфейс для всех состояний.
-{
-    protected Ball m_context;
-    public BallState(Ball context)
-    {
-        m_context = context;
-    }
-    virtual public void UpdateParams() { }
-    virtual public void Left(int columns = 1) { } // Двигатся влево
-    virtual public void Right(int columns = 1) { } // Двигатся вправо
-    virtual public void Up() { } // Двигатся вверх
-    virtual public void Down() { } // Двигатся вниз
-    virtual public void Jump() { } // Прижки
-    virtual public void OnGround(ShelfType shelfType) { } // Игрок коснулся твердой поверхности (полка, земля)
-    virtual public void OnWall() { } // Игрок ударился об стену
-    virtual public void OnCeiling(ShelfType shelfType) { } // Игрок ударился об потолок
-    virtual public void Update() { } // Метод вызываемый при перерисовке сцены (фрейма)
-    override public string ToString()
-    {
-        return "Ball State";
-    } // перегрузка общ. метода для всех объектов
-    abstract public BallStateType type { get; }
-}
-
-class BallStateHide : BallState
-{
-    //Ball m_context;
-    public BallStateHide(Ball context) : base(context) { }
-
-    override public void UpdateParams()
-    {
-        m_context.gameObject.SetActive(false);
-    }
-    override public string ToString()
-    {
-        return "HIDE";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.HIDE;
-        }
-    }
-}
-
-class BallStateShow : BallState
-{
-    public BallStateShow(Ball context) : base(context) { }
-    override public void UpdateParams()
-    {
-        m_context.gameObject.SetActive(true);
-    }
-    override public void Left(int columns)
-    {
-        m_context.SetState(BallStateType.TO_LEFT);
-        m_context.MoveLeftRight(true, BallStateType.SHOW, columns);
-    }
-    override public void Right(int columns)
-    {
-        m_context.SetState(BallStateType.TO_RIGHT);
-        m_context.MoveLeftRight(false, BallStateType.SHOW, columns);
-    }
-    override public void Up()
-    {
-        m_context.SetState(BallStateType.IN_AIR);
-    }
-    override public void Down()
-    {
-        m_context.SetState(BallStateType.TO_DOWN);
-    }
-    override public void Jump()
-    {
-        m_context.SetState(BallStateType.TO_DOWN);
-    }
-    override public void OnGround(ShelfType shelfType)
-    {
-        m_context.SetState(BallStateType.TO_DOWN);
-    }
-    override public void OnCeiling(ShelfType shelfType)
-    {
-        m_context.SetState(BallStateType.TO_DOWN);
-    }
-    override public string ToString()
-    {
-        return "SHOW";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.SHOW;
-        }
-    }
-}
-
-class BallStateInAir : BallState // Игрок пригнул вверх
-{
-    public BallStateInAir(Ball context) : base(context) { }
-    override public void UpdateParams()
-    {
-        return;
-    }
-    override public void Left(int columns)
-    {
-        m_context.SetState(BallStateType.TO_LEFT); // переходим в состояние движения влево
-        m_context.MoveLeftRight(true, BallStateType.IN_AIR, columns); // этот метод создает очередь векторов для движения влево
-    }
-    override public void Right(int columns)
-    {
-        m_context.SetState(BallStateType.TO_RIGHT); // переходим в состояние движения вправо
-        m_context.MoveLeftRight(false, BallStateType.IN_AIR, columns);  // этот метод создает очередь векторов для движения влево
-    }
-    override public void Up()
-    {
-        return;  // вверх двигатся не можем. и так уже летим =))
-    }
-    override public void Down()
-    {
-        m_context.SetState(BallStateType.TO_DOWN); // переходим в состояние движения вниз
-    }
-    override public void OnGround(ShelfType shelfType)
-    {
-        m_context.moveVectors.Clear(); // скорее всего мертвый код !!!
-    }
-    override public void OnWall()
-    {
-        return; // летим прямолинейно вверх. встену не должны врезатся.
-    }
-    override public void OnCeiling(ShelfType shelfType)
-    {
-        m_context.SetState(BallStateType.TO_DOWN); // при попадание в потолок. переходим в состояние движения вниз
-    }
-    override public void Update() // перерисовка кадра
-    {
-        if (m_context.moveVectors.Count > 0)
-        { // если есть в очереди вектора для движения
-            MoveInfo move = m_context.moveVectors.Dequeue(); // берем следующий вектор
-            m_context.Move(move); // вызываем метод игрока для движения
-        }
-        else
-        {
-            m_context.Move(new MoveInfo(m_context.upVector, m_context.UpDownSpeed)); // вызываем метод игрока для движения передав параметры движения вверх
-        }
-    }
-    override public string ToString()
-    {
-        return "InAir";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.IN_AIR;
-        }
-    }
-}
-
-class BallStateToDown : BallState // Игрок двигается вниз
-{
-    public BallStateToDown(Ball context) : base(context) { }
-    override public void OnGround(ShelfType shelfType) // призимление
-    {
-        m_context.SetState(BallStateType.JUMP); // переходим в режим прыжков
-        m_context.OnGround(shelfType); // сообщаем игроку что приземлились
-    }
-    override public void Update() // перерисовка кадра
-    {
-        m_context.Move(new MoveInfo(m_context.downVector, m_context.UpDownSpeed));
-    }
-    override public string ToString()
-    {
-        return "ToDown";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.TO_DOWN;
-        }
-    }
-}
-
-class BallStateToLeft : BallState // Игрок двигается влево
-{
-    public BallStateToLeft(Ball context) : base(context) { }
-    override public void OnGround(ShelfType shelfType) // приземлились
-    {
-        m_context.SetState(BallStateType.JUMP); // переходим в состояние прыжков
-        m_context.OnGround(shelfType); // сообщаем игроку что приземлились
-    }
-    override public void OnWall() //удар об стенку
-    {
-        m_context.FromWallToShelf(); // возвращаем  игрока назад
-    }
-    override public void Update() // перерисовка кадра
-    {
-        if (m_context.moveVectors.Count > 0)
-        { // если есть ещо векторы для движения влево
-            MoveInfo move = m_context.moveVectors.Dequeue(); // берем следующий
-            m_context.Move(move); // двигаем игрока
-        }
-        else
-        {
-            m_context.SetState(BallStateType.TO_DOWN); // иначе двигаемся вниз
-        }
-    }
-    override public string ToString()
-    {
-        return "ToLeft";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.TO_LEFT;
-        }
-    }
-}
-
-class BallStateToRight : BallState // Игрок двигается вправо
-{
-    public BallStateToRight(Ball context) : base(context) { }
-    override public void OnGround(ShelfType shelfType) // приземлились
-    {
-        m_context.SetState(BallStateType.JUMP); // переходим в состояние прыжков
-        m_context.OnGround(shelfType); // сообщаем игроку про приземление
-    }
-    override public void OnWall()
-    {
-        m_context.FromWallToShelf(); // возвращаем назад игрока
-    }
-    override public void Update() // перерисовка кадра
-    {
-        if (m_context.moveVectors.Count > 0)
-        { // если есть куда двигатся
-            MoveInfo move = m_context.moveVectors.Dequeue(); // берем сл. шаг
-            m_context.Move(move); // двигаем
-        }
-        else
-        {
-            m_context.SetState(BallStateType.TO_DOWN); // падаем вниз
-        }
-    }
-    override public string ToString()
-    {
-        return "ToRight";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.TO_RIGHT;
-        }
-    }
-}
-
-class BallStateJump : BallState // Игрок прыгает на месте
-{
-    public BallStateJump(Ball context) : base(context) { }
-    override public void Left(int columns) // прыгаем влево
-    {
-        m_context.SetState(BallStateType.TO_LEFT); // переходим в сотояние движение влево
-        m_context.MoveLeftRight(true, BallStateType.JUMP, columns); // двигаем влево
-    }
-    override public void Right(int columns) // прыжок вправо
-    {
-        m_context.SetState(BallStateType.TO_RIGHT); // переходим в сотояние движения вправо
-        m_context.MoveLeftRight(false, BallStateType.JUMP, columns);	// двигаем вправо
-    }
-    override public void Up()
-    {
-        m_context.moveVectors.Clear(); // чистим очередь векторов для прыжков
-        m_context.SetState(BallStateType.IN_AIR); // переходим в состояние движения вверх
-    }
-    override public void OnGround(ShelfType shelfType)
-    {
-        m_context.Jump(); // при приземлении прыгаем ещо раз
-    }
-    public override void Jump()
-    {
-        m_context.Jump();
-    }
-    override public void Update() // перерисовка кадра
-    {
-        if (m_context.moveVectors.Count > 0)
-        { // если есть ещо что двигать
-            MoveInfo move = m_context.moveVectors.Dequeue(); // двигаем
-            m_context.Move(move);
-        }
-    }
-    override public string ToString()
-    {
-        return "Jump";
-    }
-    override public BallStateType type
-    {
-        get
-        {
-            return BallStateType.JUMP;
-        }
-    }
-}
-
-#endregion
 
 public class Ball : MonoBehaviour
 {
+    #region States
+
+    public enum BallStateType { SHOW, HIDE, IN_AIR, TO_DOWN, TO_LEFT, TO_RIGHT, JUMP } //Типы состояния.
+    public struct MoveInfo // Структура для хранения информации о передвижении игрока
+    {
+        public MoveInfo(Vector2 v, float f) { dist = v; speed = f; }
+        public Vector2 dist; // Направление движения
+        public float speed; // Растояние которое пройдет игрок за один фрейм (кадр)
+    }
+
+    abstract class BallState // Общий интерфейс для всех состояний.
+    {
+        protected Ball m_context;
+        public BallState(Ball context)
+        {
+            m_context = context;
+        }
+        virtual public void UpdateParams() { }
+        virtual public void Left(int columns = 1) { } // Двигатся влево
+        virtual public void Right(int columns = 1) { } // Двигатся вправо
+        virtual public void Up() { } // Двигатся вверх
+        virtual public void Down() { } // Двигатся вниз
+        virtual public void Jump() { } // Прижки
+        virtual public void OnGround(ShelfType shelfType) { } // Игрок коснулся твердой поверхности (полка, земля)
+        virtual public void OnWall() { } // Игрок ударился об стену
+        virtual public void OnCeiling(ShelfType shelfType) { } // Игрок ударился об потолок
+        virtual public void Update() { } // Метод вызываемый при перерисовке сцены (фрейма)
+        override public string ToString()
+        {
+            return "Ball State";
+        } // перегрузка общ. метода для всех объектов
+        abstract public BallStateType type { get; }
+    }
+
+    class BallStateHide : BallState
+    {
+        //Ball m_context;
+        public BallStateHide(Ball context) : base(context) { }
+
+        override public void UpdateParams()
+        {
+            m_context.gameObject.SetActive(false);
+        }
+        override public string ToString()
+        {
+            return "HIDE";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.HIDE;
+            }
+        }
+    }
+
+    class BallStateShow : BallState
+    {
+        public BallStateShow(Ball context) : base(context) { }
+        override public void UpdateParams()
+        {
+            m_context.gameObject.SetActive(true);
+        }
+        override public void Left(int columns)
+        {
+            m_context.SetState(BallStateType.TO_LEFT);
+            m_context.MoveLeftRight(true, BallStateType.SHOW, columns);
+        }
+        override public void Right(int columns)
+        {
+            m_context.SetState(BallStateType.TO_RIGHT);
+            m_context.MoveLeftRight(false, BallStateType.SHOW, columns);
+        }
+        override public void Up()
+        {
+            m_context.SetState(BallStateType.IN_AIR);
+        }
+        override public void Down()
+        {
+            m_context.SetState(BallStateType.TO_DOWN);
+        }
+        override public void Jump()
+        {
+            m_context.SetState(BallStateType.TO_DOWN);
+        }
+        override public void OnGround(ShelfType shelfType)
+        {
+            m_context.SetState(BallStateType.TO_DOWN);
+        }
+        override public void OnCeiling(ShelfType shelfType)
+        {
+            m_context.SetState(BallStateType.TO_DOWN);
+        }
+        override public string ToString()
+        {
+            return "SHOW";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.SHOW;
+            }
+        }
+    }
+
+    class BallStateInAir : BallState // Игрок пригнул вверх
+    {
+        public BallStateInAir(Ball context) : base(context) { }
+        override public void UpdateParams()
+        {
+            return;
+        }
+        override public void Left(int columns)
+        {
+            m_context.SetState(BallStateType.TO_LEFT); // переходим в состояние движения влево
+            m_context.MoveLeftRight(true, BallStateType.IN_AIR, columns); // этот метод создает очередь векторов для движения влево
+        }
+        override public void Right(int columns)
+        {
+            m_context.SetState(BallStateType.TO_RIGHT); // переходим в состояние движения вправо
+            m_context.MoveLeftRight(false, BallStateType.IN_AIR, columns);  // этот метод создает очередь векторов для движения влево
+        }
+        override public void Up()
+        {
+            return;  // вверх двигатся не можем. и так уже летим =))
+        }
+        override public void Down()
+        {
+            m_context.SetState(BallStateType.TO_DOWN); // переходим в состояние движения вниз
+        }
+        override public void OnGround(ShelfType shelfType)
+        {
+            m_context.moveVectors.Clear(); // скорее всего мертвый код !!!
+        }
+        override public void OnWall()
+        {
+            return; // летим прямолинейно вверх. встену не должны врезатся.
+        }
+        override public void OnCeiling(ShelfType shelfType)
+        {
+            m_context.SetState(BallStateType.TO_DOWN); // при попадание в потолок. переходим в состояние движения вниз
+        }
+        override public void Update() // перерисовка кадра
+        {
+            if (m_context.moveVectors.Count > 0)
+            { // если есть в очереди вектора для движения
+                MoveInfo move = m_context.moveVectors.Dequeue(); // берем следующий вектор
+                m_context.Move(move); // вызываем метод игрока для движения
+            }
+            else
+            {
+                m_context.Move(new MoveInfo(m_context.upVector, m_context.UpDownSpeed)); // вызываем метод игрока для движения передав параметры движения вверх
+            }
+        }
+        override public string ToString()
+        {
+            return "InAir";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.IN_AIR;
+            }
+        }
+    }
+
+    class BallStateToDown : BallState // Игрок двигается вниз
+    {
+        public BallStateToDown(Ball context) : base(context) { }
+        override public void OnGround(ShelfType shelfType) // призимление
+        {
+            m_context.SetState(BallStateType.JUMP); // переходим в режим прыжков
+            m_context.OnGround(shelfType); // сообщаем игроку что приземлились
+        }
+        override public void Update() // перерисовка кадра
+        {
+            m_context.Move(new MoveInfo(m_context.downVector, m_context.UpDownSpeed));
+        }
+        override public string ToString()
+        {
+            return "ToDown";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.TO_DOWN;
+            }
+        }
+    }
+
+    class BallStateToLeft : BallState // Игрок двигается влево
+    {
+        public BallStateToLeft(Ball context) : base(context) { }
+        override public void OnGround(ShelfType shelfType) // приземлились
+        {
+            m_context.SetState(BallStateType.JUMP); // переходим в состояние прыжков
+            m_context.OnGround(shelfType); // сообщаем игроку что приземлились
+        }
+        override public void OnWall() //удар об стенку
+        {
+            m_context.FromWallToShelf(); // возвращаем  игрока назад
+        }
+        override public void Update() // перерисовка кадра
+        {
+            if (m_context.moveVectors.Count > 0)
+            { // если есть ещо векторы для движения влево
+                MoveInfo move = m_context.moveVectors.Dequeue(); // берем следующий
+                m_context.Move(move); // двигаем игрока
+            }
+            else
+            {
+                m_context.SetState(BallStateType.TO_DOWN); // иначе двигаемся вниз
+            }
+        }
+        override public string ToString()
+        {
+            return "ToLeft";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.TO_LEFT;
+            }
+        }
+    }
+
+    class BallStateToRight : BallState // Игрок двигается вправо
+    {
+        public BallStateToRight(Ball context) : base(context) { }
+        override public void OnGround(ShelfType shelfType) // приземлились
+        {
+            m_context.SetState(BallStateType.JUMP); // переходим в состояние прыжков
+            m_context.OnGround(shelfType); // сообщаем игроку про приземление
+        }
+        override public void OnWall()
+        {
+            m_context.FromWallToShelf(); // возвращаем назад игрока
+        }
+        override public void Update() // перерисовка кадра
+        {
+            if (m_context.moveVectors.Count > 0)
+            { // если есть куда двигатся
+                MoveInfo move = m_context.moveVectors.Dequeue(); // берем сл. шаг
+                m_context.Move(move); // двигаем
+            }
+            else
+            {
+                m_context.SetState(BallStateType.TO_DOWN); // падаем вниз
+            }
+        }
+        override public string ToString()
+        {
+            return "ToRight";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.TO_RIGHT;
+            }
+        }
+    }
+
+    class BallStateJump : BallState // Игрок прыгает на месте
+    {
+        public BallStateJump(Ball context) : base(context) { }
+        override public void Left(int columns) // прыгаем влево
+        {
+            m_context.SetState(BallStateType.TO_LEFT); // переходим в сотояние движение влево
+            m_context.MoveLeftRight(true, BallStateType.JUMP, columns); // двигаем влево
+        }
+        override public void Right(int columns) // прыжок вправо
+        {
+            m_context.SetState(BallStateType.TO_RIGHT); // переходим в сотояние движения вправо
+            m_context.MoveLeftRight(false, BallStateType.JUMP, columns);	// двигаем вправо
+        }
+        override public void Up()
+        {
+            m_context.moveVectors.Clear(); // чистим очередь векторов для прыжков
+            m_context.SetState(BallStateType.IN_AIR); // переходим в состояние движения вверх
+        }
+        override public void OnGround(ShelfType shelfType)
+        {
+            m_context.Jump(); // при приземлении прыгаем ещо раз
+        }
+        public override void Jump()
+        {
+            m_context.Jump();
+        }
+        override public void Update() // перерисовка кадра
+        {
+            if (m_context.moveVectors.Count > 0)
+            { // если есть ещо что двигать
+                MoveInfo move = m_context.moveVectors.Dequeue(); // двигаем
+                m_context.Move(move);
+            }
+            else
+            {
+                m_context.SetState(BallStateType.TO_DOWN);
+            }
+        }
+        override public string ToString()
+        {
+            return "Jump";
+        }
+        override public BallStateType type
+        {
+            get
+            {
+                return BallStateType.JUMP;
+            }
+        }
+    }
+    #endregion
     List<MonoBehaviour> m_Shelfs = new List<MonoBehaviour>(); // список всех доступных полок на сцене	
     public List<MonoBehaviour> Shelfs
     {
@@ -388,14 +392,14 @@ public class Ball : MonoBehaviour
     Dictionary<BallStateType, BallState> m_States; // список доступных состояний
     Queue<MoveInfo> m_moveVectors = new Queue<MoveInfo>(); // очередь векторов для движения
     Stack<MoveInfo> m_moveBackVectors = new Stack<MoveInfo>(); // стек векторов для обратного движения
-    public Queue<MoveInfo> moveVectors
+    Queue<MoveInfo> moveVectors
     {
         get
         {
             return m_moveVectors;
         }
     }
-    MoveInfo m_moveVector; //текущий вектор для движения
+    //MoveInfo m_moveVector; //текущий вектор для движения
 
     public void SetState(BallStateType type) // метод для изменения состояния
     {
@@ -411,8 +415,8 @@ public class Ball : MonoBehaviour
     {
         m_CellSide = GameInfo.cellSide;
 
-        m_moveVector.dist = m_StopVector; //началный вектор движения - стоять на месте.
-        m_moveVector.speed = 0.0f; // начальная скорость движения
+        //m_moveVector.dist = m_StopVector; //началный вектор движения - стоять на месте.
+        //m_moveVector.speed = 0.0f; // начальная скорость движения
         m_States = new Dictionary<BallStateType, BallState>(7);
         m_States[BallStateType.SHOW] = new BallStateShow(this);
         m_States[BallStateType.HIDE] = new BallStateHide(this);

@@ -30,7 +30,7 @@ class StarStateHide : StarState
     {
         return;
     }
-    public string ToString()
+    public override string ToString()
     {
         return "HIDE";
     }
@@ -49,7 +49,7 @@ class StarStateShow : StarState
         base.SendStarStartEvent();
         return;
     }
-    public string ToString()
+    public override string ToString()
     {
         return "SHOW";
     }

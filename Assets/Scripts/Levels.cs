@@ -4,6 +4,12 @@ using System.Collections.Generic;
 
 public class Levels : MonoBehaviour
 {
+    struct MoveInfo // Структура для хранения информации о передвижении игрока
+    {
+        public MoveInfo(Vector2 v, float f) { dist = v; speed = f; }
+        public Vector2 dist; // Направление движения
+        public float speed; // Растояние которое пройдет игрок за один фрейм (кадр)
+    }
 
     Queue<GameObject> m_levels = new Queue<GameObject>();
     Queue<Heart> hearts = new Queue<Heart>();
@@ -40,7 +46,7 @@ public class Levels : MonoBehaviour
     void OnLevelExit(Exit sender)
     {
         toNextLevel = true;
-        m_ball.SetState(BallStateType.HIDE);
+        m_ball.SetState(Ball.BallStateType.HIDE);
 
         //int cnt = (int)(m_W / Speed) - 60;
         int cnt = (int)(m_W / Speed);
@@ -195,7 +201,7 @@ public class Levels : MonoBehaviour
             }
         }
         m_ball.Shelfs = m_shelfs;
-        m_ball.SetState(BallStateType.SHOW);
+        m_ball.SetState(Ball.BallStateType.SHOW);
 
     }
     // Update is called once per frame
