@@ -410,6 +410,11 @@ public class Ball : MonoBehaviour
         }
     }
 
+    public BallStateType GetState()
+    {
+        return m_State.type;
+    }
+
     // Use this for initialization
     void Start()
     {
@@ -591,6 +596,7 @@ public class Ball : MonoBehaviour
         moveInfo.dist.y *= -1; //меняем направление по у на противоположное
         m_moveBackVectors.Push(moveInfo); // ложим в стек инфо про посл. движение игрока        
     }
+    
     public void FromWallToShelf()
     {
         m_moveVectors.Clear(); // очищаем данные о движении

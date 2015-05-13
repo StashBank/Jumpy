@@ -84,6 +84,7 @@ public class Shelf : MonoBehaviour {
             }
         }
     }
+    
     class ShelfTypeDisappearByMultJumpsState : ShelfTypeDisappearState
     {
         public ShelfTypeDisappearByMultJumpsState()
@@ -125,6 +126,27 @@ public class Shelf : MonoBehaviour {
         }
     }
 
+    class ChangeableToTowardsOn1CellsState : ShelfTypeState
+    {
+        public ChangeableToTowardsOn1CellsState()
+        {
+            m_type = ShelfType.ChangeableToTowardsOn1Cells;
+        }
+
+        public override void OnTriggerEnter2D(Collider2D inCollider)
+        {
+            base.OnTriggerEnter2D(inCollider);
+        }
+    }
+
+    class StickyState : ShelfTypeState
+    {
+        public StickyState()
+        {
+            m_type = ShelfType.Sticky;
+        }
+    }
+
 	Ball ball;
     public ShelfType shelfType;
     ShelfTypeState m_shelfTypeState;
@@ -137,7 +159,9 @@ public class Shelf : MonoBehaviour {
             {ShelfType.TowardsOn1CellsRight,typeof(TowardsOn1CellsRightState)},
             {ShelfType.TowardsOn1CellsLeft,typeof(TowardsOn1CellsLeftState)},
             {ShelfType.TowardsOn2CellsLeft,typeof(TowardsOn2CellsLeftState)},
-            {ShelfType.TowardsOn2CellsRight,typeof(TowardsOn2CellsRighttState)}
+            {ShelfType.TowardsOn2CellsRight,typeof(TowardsOn2CellsRighttState)},
+            {ShelfType.ChangeableToTowardsOn1Cells,typeof(ChangeableToTowardsOn1CellsState)},
+            {ShelfType.Sticky,typeof(StickyState)}
         };
 	// Use this for initialization
 	void Start () 
