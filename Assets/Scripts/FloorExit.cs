@@ -25,7 +25,6 @@ public class FloorExit : MonoBehaviour {
     {
         if (PlayerPrefs.GetInt("lives") > 0)
         {
-            print(PlayerPrefs.GetInt("lives"));
             PlayerPrefs.SetInt("lives", PlayerPrefs.GetInt("lives") - 1);
             m_ball.transform.position = new Vector2(PlayerPrefs.GetFloat("levelPositionX"), PlayerPrefs.GetFloat("levelPositionY"));
         }

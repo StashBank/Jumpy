@@ -7,9 +7,11 @@ public struct GameInfo
     static float m_CellSide = 10.0f;
     public static float cellSide { get { return m_CellSide; } }
 }
+
 public class Controls : MonoBehaviour {
 
     public GameObject levels;
+    public GameObject LeftWall, RightWall;
 
 	// Use this for initialization
 	void Start () 
@@ -133,7 +135,7 @@ public class Controls : MonoBehaviour {
         }
         if (Input.GetKeyUp(KeyCode.Escape))
         {
-            //Application.Quit();
+            Application.Quit();
         }
 	}
 
