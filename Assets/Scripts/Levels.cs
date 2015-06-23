@@ -72,12 +72,6 @@ public class Levels : MonoBehaviour
             }
             m_backGroundMoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), dif));
         }
-        /*foreach (GameObject item in m_levels)
-        {
-            item.transform.Translate(new Vector3(0, -m_H, 0));
-        }
-        Destroy(m_currentLevel.gameObject);
-        NextLevel();*/
     }
 
     
@@ -154,11 +148,6 @@ public class Levels : MonoBehaviour
             }
         }
         NextLevel();
-    }
-
-    void temp_tryExit(FloorExit sender)
-    {
-        throw new System.NotImplementedException();
     }
 
     void NextLevel()

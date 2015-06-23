@@ -8,8 +8,9 @@ using System.IO;
 
 public class Ball : MonoBehaviour
 {
-    #region States
-
+    public delegate void BallStateChangedDelegate(BallStateType newState);
+    public delegate void GameOverDelegate();
+    #region States    
     public enum BallStateType { SHOW, HIDE, IN_AIR, TO_DOWN, TO_LEFT, TO_RIGHT, JUMP } //Типы состояния.
     public struct MoveInfo // Структура для хранения информации о передвижении игрока
     {
@@ -383,6 +384,9 @@ public class Ball : MonoBehaviour
     public Vector2 JumpVector = new Vector2(0, 4); // вектор длины прыжков на месте
     public Vector2 LeftRightVector = new Vector2(10, 0); // вектор длины прыжка влево/право (сейчас не используется)
     #endregion
+
+    public event BallStateChangedDelegate BallStateChanged = delegate(BallStateType newState) { };
+    public event GameOverDelegate GameOver = delegate() { };
     public float LeftRightSpeed = 0.05f; // скорость передвижения влево/право
     public float UpDownSpeed = 0.015f; // скорость движения вверх/вниз
     public float JumpSpeed = 0.010f; // скорость прыжков
@@ -407,6 +411,7 @@ public class Ball : MonoBehaviour
         {
             m_State = m_States[type]; // то устаналвиваем ссылку на этот тип.
             m_State.UpdateParams();
+            BallStateChanged(type);
         }
     }
 
@@ -675,13 +680,20 @@ public class Ball : MonoBehaviour
     public void OnGround(ShelfType shelfType)
     {
         BallStateType stateFrom = m_State.type;
-        //SetState(BallStateType.SHOW);
-        SetState(BallStateType.JUMP);
+        SetState(BallStateType.SHOW);
         bool anyKey = Input.anyKey; // если нажата любая кнопка
         if (Input.GetKey(KeyCode.DownArrow))
             anyKey = false;
         switch (shelfType)
         {
+            case ShelfType.DisappearByMultJumps:
+            case ShelfType.DisappearByOneJumps:
+                if (anyKey)
+                {
+                    PressedKey();
+                    return;
+                }
+                break;
             case ShelfType.Ice:
                 if (anyKey)
                 {
@@ -710,14 +722,26 @@ public class Ball : MonoBehaviour
             case ShelfType.TowardsOn2CellsRight:
                 RightKey(2);
                 break;
+            case ShelfType.DoubleSpike:
+                GameOver();
+                break;
         }
-        //SetState(BallStateType.JUMP);
+        SetState(BallStateType.JUMP);
         m_State.Jump();
     }
 
     public void OnCeiling(ShelfType shelfType)
     {
-        m_State.OnCeiling(shelfType); // Делегируем обработку текущему состоянию
+        switch (shelfType)
+        {
+            case ShelfType.DoubleSpike:
+            case ShelfType.BotomSpike:
+                GameOver();
+                break;
+            default:
+                m_State.OnCeiling(shelfType);
+                break;
+        }
     }
 
     public void OnWall()
