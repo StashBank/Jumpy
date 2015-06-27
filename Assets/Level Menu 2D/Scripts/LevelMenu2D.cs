@@ -183,12 +183,7 @@ public class LevelMenu2D : Singleton<LevelMenu2D> {
         createMenu();
         gotoItem(initialItemNumber);
         isMenuCreating = false;
-        LevelMenu2D.I.OnItemClicked += delegate(int itemIndex, GameObject itemObject)
-        {
-            Application.LoadLevel("Mission" + (itemIndex + 1));
-        };
-
-	}
+	}    
 	// Update is called once per frame
 	void Update () {
 		if (autoUpdateAtRuntime)

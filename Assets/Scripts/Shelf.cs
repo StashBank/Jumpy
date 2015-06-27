@@ -10,11 +10,11 @@ public enum ShelfType {
     DisappearByOneJumps, // +Исчезает если на полке перейти в состояние прыгов
     Disappear, // Исчезает сразу. пропускает через себя (пустышка)
     Sticky, // Липкая полка (Вертикальная). Нужно продумать поведение шарика
-    TowardsOn1CellsLeft, //Бросает шарик влево на 1 колонку
-    TowardsOn1CellsRight, //Бросает шарик вправо на 1 колонку
-    TowardsOn2CellsLeft, //Бросает шарик влево на 2 колонку
-    TowardsOn2CellsRight, //Бросает шарик вправо на 2 колонку
-    ChangeableToTowardsOn1Cells, //При вертикальных прижках обычная полка. при приге всторону изменяется на полку с типом TowardsOn1CellsLeft|TowardsOn1CellsRight
+    TowardsOn1CellsLeft, //+Бросает шарик влево на 1 колонку
+    TowardsOn1CellsRight, //+Бросает шарик вправо на 1 колонку
+    TowardsOn2CellsLeft, //+Бросает шарик влево на 2 колонку
+    TowardsOn2CellsRight, //+Бросает шарик вправо на 2 колонку
+    ChangeableToTowardsOn1Cells, //+При вертикальных прижках обычная полка. при приге всторону изменяется на полку с типом TowardsOn1CellsLeft|TowardsOn1CellsRight
     DoubleSpike, //Шипы по обеем сторонам полки. Горизонтальная|Вертикальная
     BotomSpike, //Шипы снизу полки (Горизонтальная)
     PullUp,
@@ -63,12 +63,12 @@ public class Shelf : MonoBehaviour {
         }
     }
 
-    class ShelfTypeDisappearBuOneJumpState : ShelfTypeState
+    class ShelfTypeDisappearByOneJumpState : ShelfTypeState
     {
         protected int count = 1;
         protected  float step = 0.0f;
         private Collider2D inCollider;
-        public ShelfTypeDisappearBuOneJumpState()
+        public ShelfTypeDisappearByOneJumpState()
         {
             m_type = ShelfType.DisappearByOneJumps;
         }
@@ -108,7 +108,7 @@ public class Shelf : MonoBehaviour {
         }
     }
 
-    class ShelfTypeDisappearByMultJumpsState : ShelfTypeDisappearBuOneJumpState
+    class ShelfTypeDisappearByMultJumpsState : ShelfTypeDisappearByOneJumpState
     {
         public ShelfTypeDisappearByMultJumpsState()
         {
@@ -210,7 +210,7 @@ public class Shelf : MonoBehaviour {
         {
             {ShelfType.Standart,typeof(ShelfTypeStandartState)},
             {ShelfType.Ice,typeof(ShelfTypeIceState)},
-            {ShelfType.DisappearByOneJumps,typeof(ShelfTypeDisappearBuOneJumpState)},
+            {ShelfType.DisappearByOneJumps,typeof(ShelfTypeDisappearByOneJumpState)},
             {ShelfType.DisappearByMultJumps,typeof(ShelfTypeDisappearByMultJumpsState)},
             {ShelfType.TowardsOn1CellsRight,typeof(TowardsOn1CellsRightState)},
             {ShelfType.TowardsOn1CellsLeft,typeof(TowardsOn1CellsLeftState)},
