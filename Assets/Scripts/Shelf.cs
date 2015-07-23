@@ -23,6 +23,7 @@ public enum ShelfType {
 }
 public class Shelf : MonoBehaviour {
 
+    private Animator animator;
     abstract class ShelfTypeState
     {
         protected Shelf m_context;
@@ -227,6 +228,7 @@ public class Shelf : MonoBehaviour {
         if (ball == null)
             ball = GameObject.Find("Ball").GetComponent<Ball>();
         UpdateState();
+        animator = GetComponent<Animator>();
 	}
 	
 	// Update is called once per frame
@@ -238,6 +240,7 @@ public class Shelf : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D inCollider)
 	{
         m_shelfTypeState.OnTriggerEnter2D(inCollider);
+        animator.SetTrigger("ballOn");
 	}
 
     ShelfTypeState GetShelfType()
