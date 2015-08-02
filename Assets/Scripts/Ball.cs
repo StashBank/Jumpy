@@ -10,6 +10,7 @@ public class Ball : MonoBehaviour
 {
     public delegate void BallStateChangedDelegate(BallStateType newState);
     public delegate void GameOverDelegate();
+    public delegate void KeyPressed();
     #region States    
     public enum BallStateType { SHOW, HIDE, IN_AIR, TO_DOWN, TO_LEFT, TO_RIGHT, JUMP } //Типы состояния.
     public struct MoveInfo // Структура для хранения информации о передвижении игрока
@@ -216,7 +217,6 @@ public class Ball : MonoBehaviour
         }
         override public void Update() // перерисовка кадра
         {
-            print(m_context.moveVectors.Count);
             if (m_context.moveVectors.Count > 0)
             { // если есть ещо векторы для движения влево
                 MoveInfo move = m_context.moveVectors.Dequeue(); // берем следующий
@@ -388,6 +388,11 @@ public class Ball : MonoBehaviour
 
     public event BallStateChangedDelegate BallStateChanged = delegate(BallStateType newState) { };
     public event GameOverDelegate GameOver = delegate() { };
+    public event KeyPressed KeyUpPressed = delegate() { };
+    public event KeyPressed KeyDownPressed = delegate() { };
+    public event KeyPressed KeyLeftPressed = delegate() { };
+    public event KeyPressed KeyRightPressed = delegate() { };
+    public event KeyPressed NoKeyPressed = delegate() { };
     public float LeftRightSpeed = 0.05f; // скорость передвижения влево/право
     public float UpDownSpeed = 0.015f; // скорость движения вверх/вниз
     public float JumpSpeed = 0.010f; // скорость прыжков
@@ -405,7 +410,6 @@ public class Ball : MonoBehaviour
         }
     }
     //MoveInfo m_moveVector; //текущий вектор для движения
-
     public void SetState(BallStateType type) // метод для изменения состояния
     {
         if (m_States.ContainsKey(type)) // если тип сотояния есть в списке доступных
@@ -436,7 +440,7 @@ public class Ball : MonoBehaviour
         m_States[BallStateType.TO_LEFT] = new BallStateToLeft(this);
         m_States[BallStateType.TO_RIGHT] = new BallStateToRight(this);
         m_States[BallStateType.JUMP] = new BallStateJump(this);
-        SetState(BallStateType.SHOW); // начальное состоянние. (можно продумать инициализ. при старте)      
+        SetState(BallStateType.SHOW); // начальное состоянние. (можно продумать инициализ. при старте)
     }
 
     int MinMultiple(float number, int multiply)
@@ -628,12 +632,12 @@ public class Ball : MonoBehaviour
                 m_moveVectors.Enqueue(new MoveInfo(m_DownVector, JumpSpeed));
             cnt--;
         }
+        NoKeyPressed();
     }
     // Update is called once per frame
     void FixedUpdate()
     {
-        m_State.Update(); // Делегируем обработку текущему состоянию        
-
+		m_State.Update();
         PressedKey();
     }
 
@@ -641,40 +645,44 @@ public class Ball : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.UpArrow))
         {
-            m_State.Up(); // Делегируем обработку текущему состоянию
+            UpKey();
         }
         if (Input.GetKey(KeyCode.DownArrow))
         {
-            m_State.Down(); // Делегируем обработку текущему состоянию
+            DownKey();
         }
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            m_State.Right(); // Делегируем обработку текущему состоянию
+            RightKey();
         }
         if (Input.GetKey(KeyCode.LeftArrow))
         {
-            m_State.Left(); // Делегируем обработку текущему состоянию
+            LeftKey();
         }
     }
 
     public void LeftKey(int columns = 1)
     {
         m_State.Left(columns);
+        KeyLeftPressed();
     }
 
     public void RightKey(int columns = 1)
     {
         m_State.Right(columns);
+        KeyRightPressed();
     }
 
     public void UpKey()
     {
         m_State.Up();
+        KeyUpPressed();
     }
 
     public void DownKey()
     {
         m_State.Down();
+        KeyDownPressed();
     }
 
     public void OnGround(ShelfType shelfType)

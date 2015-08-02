@@ -2,7 +2,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 
+#region ShelfTypes
 public enum ShelfType { 
     Standart, // +Обычная полочка
     Ice,  // +Сколзящая (перемещает шарик далее по направлению, если не задать другое движение)
@@ -21,9 +23,10 @@ public enum ShelfType {
     Cloud, //?????
     Teleport
 }
-public class Shelf : MonoBehaviour {
-
-    private Animator animator;
+#endregion
+public class Shelf : MonoBehaviour
+{
+    #region ShelfTypeState
     abstract class ShelfTypeState
     {
         protected Shelf m_context;
@@ -45,17 +48,17 @@ public class Shelf : MonoBehaviour {
 
         protected bool GetIsOnGround(Collider2D inCollider)
         {
-            Vector2 inPos = inCollider.transform.position;
-            Vector2 pos = m_context.transform.position;
-            return !(pos.y > inPos.y);
+            return m_context.GetIsOnGround(inCollider);
         }
     }
-
+    #endregion
+    #region ShelfTypeStandartState
     class ShelfTypeStandartState : ShelfTypeState
     {
         
     }
-
+    #endregion
+    #region ShelfTypeIceState
     class ShelfTypeIceState : ShelfTypeState
     {
         public ShelfTypeIceState()
@@ -63,7 +66,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.Ice;
         }
     }
-
+    #endregion
+    #region ShelfTypeDisappearByOneJumpState
     class ShelfTypeDisappearByOneJumpState : ShelfTypeState
     {
         protected int count = 1;
@@ -108,7 +112,8 @@ public class Shelf : MonoBehaviour {
             }           
         }
     }
-
+    #endregion
+    #region ShelfTypeDisappearByMultJumpsState
     class ShelfTypeDisappearByMultJumpsState : ShelfTypeDisappearByOneJumpState
     {
         public ShelfTypeDisappearByMultJumpsState()
@@ -117,7 +122,8 @@ public class Shelf : MonoBehaviour {
             count = 5;
         }
     }
-
+    #endregion
+    #region TowardsOn1CellsRightState
     class TowardsOn1CellsRightState : ShelfTypeState
     {
         public TowardsOn1CellsRightState()
@@ -125,7 +131,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.TowardsOn1CellsRight;
         }
     }
-
+    #endregion
+    #region TowardsOn1CellsLeftState
     class TowardsOn1CellsLeftState : ShelfTypeState
     {
         public TowardsOn1CellsLeftState()
@@ -133,7 +140,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.TowardsOn1CellsLeft;
         }
     }
-
+    #endregion
+    #region TowardsOn2CellsLeftState
     class TowardsOn2CellsLeftState : ShelfTypeState
     {
         public TowardsOn2CellsLeftState()
@@ -141,7 +149,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.TowardsOn2CellsLeft;
         }
     }
-
+    #endregion
+    #region TowardsOn2CellsRighttState
     class TowardsOn2CellsRighttState : ShelfTypeState
     {
         public TowardsOn2CellsRighttState()
@@ -149,7 +158,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.TowardsOn2CellsRight;
         }
     }
-
+    #endregion
+    #region ChangeableToTowardsOn1CellsState
     class ChangeableToTowardsOn1CellsState : ShelfTypeState
     {
         public ChangeableToTowardsOn1CellsState()
@@ -179,7 +189,8 @@ public class Shelf : MonoBehaviour {
             }
         }
     }
-
+    #endregion
+    #region StickyState
     class StickyState : ShelfTypeState
     {
         public StickyState()
@@ -187,7 +198,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.Sticky;
         }
     }
-
+    #endregion
+    #region DoubleSpikeState
     class DoubleSpikeState : ShelfTypeState
     {
         public DoubleSpikeState()
@@ -195,7 +207,8 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.DoubleSpike;
         }
     }
-
+    #endregion
+    #region BotomSpikeState
     class BotomSpikeState : ShelfTypeState
     {
         public BotomSpikeState()
@@ -203,10 +216,11 @@ public class Shelf : MonoBehaviour {
             m_type = ShelfType.BotomSpike;
         }
     }
-
-	Ball ball;
+    #endregion
+    Ball ball;
     public ShelfType shelfType;
     ShelfTypeState m_shelfTypeState;
+    #region States init
     Dictionary<ShelfType, Type> m_states = new Dictionary<ShelfType, Type>
         {
             {ShelfType.Standart,typeof(ShelfTypeStandartState)},
@@ -222,30 +236,41 @@ public class Shelf : MonoBehaviour {
             {ShelfType.BotomSpike,typeof(BotomSpikeState)},
             {ShelfType.DoubleSpike,typeof(DoubleSpikeState)},
         };
+    #endregion
+    Animator animator
+    {
+        get
+        {
+            return this.ToString() == "null" ? null : GetComponent<Animator>();
+        }
+    }
+	bool isPlayAnimation = false;
 	// Use this for initialization
 	void Start () 
 	{
         if (ball == null)
+        {
             ball = GameObject.Find("Ball").GetComponent<Ball>();
+        }
         UpdateState();
-        animator = GetComponent<Animator>();
-	}
-	
+	}	
 	// Update is called once per frame
 	void Update () 
 	{
-	
-	}
 
+	}
 	void OnTriggerEnter2D(Collider2D inCollider)
 	{
+		OnNoKeyPressed(inCollider);
         m_shelfTypeState.OnTriggerEnter2D(inCollider);
-        if (animator != null)
+        if (GetIsOnGround(inCollider))
         {
-            animator.SetTrigger("ballOn");
+			isPlayAnimation = true;
+            ball.KeyUpPressed += OnKeyUpPressed;
+            ball.KeyLeftPressed += OnLeftKeyPressed;
+            ball.KeyRightPressed += OnRightKeyPressed;
         }
 	}
-
     ShelfTypeState GetShelfType()
     {
         Type type = null;
@@ -258,10 +283,48 @@ public class Shelf : MonoBehaviour {
         
         return state;
     }
-
     void UpdateState()
     {
         m_shelfTypeState = GetShelfType();
         m_shelfTypeState.SetParam(this, ball);
+    }
+    bool SetAnimatorTrigger(string triggerName)
+    {
+        if (animator != null && isPlayAnimation)
+        {
+            animator.SetTrigger(triggerName);
+			isPlayAnimation = false;
+            return true;
+        }
+        return false;
+    }
+    void OnKeyUpPressed()
+    {
+		SetAnimatorTrigger("ballUp");
+    }
+    void OnNoKeyPressed(Collider2D inCollider)
+    {
+		isPlayAnimation = true;
+		if (GetIsOnGround(inCollider)) {
+			SetAnimatorTrigger("ballOn");
+		} else {
+			SetAnimatorTrigger("bottomBounce");
+		}
+    }
+    void OnLeftKeyPressed()
+    {
+        ball.KeyUpPressed -= OnKeyUpPressed;
+        SetAnimatorTrigger("ballLeft");
+    }
+    void OnRightKeyPressed()
+    {
+        ball.KeyUpPressed -= OnKeyUpPressed;
+        SetAnimatorTrigger("ballRight");
+    }
+    public bool GetIsOnGround(Collider2D inCollider)
+    {
+        Vector2 inPos = inCollider.transform.position;
+        Vector2 pos = transform.position;
+        return !(pos.y > inPos.y);
     }
 }
