@@ -216,6 +216,7 @@ public class Ball : MonoBehaviour
         }
         override public void Update() // перерисовка кадра
         {
+            print(m_context.moveVectors.Count);
             if (m_context.moveVectors.Count > 0)
             { // если есть ещо векторы для движения влево
                 MoveInfo move = m_context.moveVectors.Dequeue(); // берем следующий
@@ -553,7 +554,6 @@ public class Ball : MonoBehaviour
     {
         m_moveVectors.Clear(); // очищаем очередь движений
         m_moveBackVectors.Clear(); // очищаем очередь обратных движений
-
         if (!PreLeftRight(stateFrom))
         {
             return;
@@ -712,16 +712,16 @@ public class Ball : MonoBehaviour
                 break;
             case ShelfType.TowardsOn1CellsRight:
                 RightKey();
-                break;
+                return;
             case ShelfType.TowardsOn1CellsLeft:
                 LeftKey();
-                break;
+                return;
             case ShelfType.TowardsOn2CellsLeft:
                 LeftKey(2);
-                break;
+                return;
             case ShelfType.TowardsOn2CellsRight:
                 RightKey(2);
-                break;
+                return;
             case ShelfType.DoubleSpike:
                 GameOver();
                 break;

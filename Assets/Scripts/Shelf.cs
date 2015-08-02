@@ -240,7 +240,10 @@ public class Shelf : MonoBehaviour {
 	void OnTriggerEnter2D(Collider2D inCollider)
 	{
         m_shelfTypeState.OnTriggerEnter2D(inCollider);
-        animator.SetTrigger("ballOn");
+        if (animator != null)
+        {
+            animator.SetTrigger("ballOn");
+        }
 	}
 
     ShelfTypeState GetShelfType()
