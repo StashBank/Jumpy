@@ -11,8 +11,9 @@ public class Ball : MonoBehaviour
     public delegate void BallStateChangedDelegate(BallStateType newState);
     public delegate void GameOverDelegate();
     public delegate void KeyPressed();
+    public Animator anim;
     #region States    
-    public enum BallStateType { SHOW, HIDE, IN_AIR, TO_DOWN, TO_LEFT, TO_RIGHT, JUMP } //Типы состояния.
+    public enum BallStateType { SHOW, HIDE, IN_AIR, TO_DOWN, TO_LEFT, TO_RIGHT, JUMP} //Типы состояния.
     public struct MoveInfo // Структура для хранения информации о передвижении игрока
     {
         public MoveInfo(Vector2 v, float f) { dist = v; speed = f; }
@@ -231,6 +232,7 @@ public class Ball : MonoBehaviour
         {
             return "ToLeft";
         }
+        
         override public BallStateType type
         {
             get
@@ -276,7 +278,6 @@ public class Ball : MonoBehaviour
             }
         }
     }
-
     class BallStateJump : BallState // Игрок прыгает на месте
     {
         public BallStateJump(Ball context) : base(context) { }
@@ -441,6 +442,7 @@ public class Ball : MonoBehaviour
         m_States[BallStateType.TO_RIGHT] = new BallStateToRight(this);
         m_States[BallStateType.JUMP] = new BallStateJump(this);
         SetState(BallStateType.SHOW); // начальное состоянние. (можно продумать инициализ. при старте)
+        anim = GetComponent<Animator>();
     }
 
     int MinMultiple(float number, int multiply)
@@ -577,7 +579,8 @@ public class Ball : MonoBehaviour
         while (cntFrames > 0)  // обработка движения влево/вправо по кадрам
         {
             x += d;
-            y = x * (1 - x) * 1.75f;
+            //y = x * (1 - x) * 1.75f;
+            //y = y;
             if (x > maxX / 2)
                 y = -y;
             if (x == maxX / 2)
@@ -665,6 +668,7 @@ public class Ball : MonoBehaviour
     {
         m_State.Left(columns);
         KeyLeftPressed();
+        anim.SetTrigger("left_ball");
     }
 
     public void RightKey(int columns = 1)

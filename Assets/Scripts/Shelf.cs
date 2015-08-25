@@ -45,7 +45,10 @@ public class Shelf : MonoBehaviour
             else
                 m_ball.OnGround(m_type);
         }
+        public virtual void TeleportTo()
+        {
 
+        }
         protected bool GetIsOnGround(Collider2D inCollider)
         {
             return m_context.GetIsOnGround(inCollider);
@@ -178,6 +181,7 @@ public class Shelf : MonoBehaviour
             if (newState == Ball.BallStateType.TO_LEFT)
             {
                 m_context.shelfType = ShelfType.TowardsOn1CellsLeft;
+                
                 m_context.UpdateState();
                 m_ball.BallStateChanged -= OnBallStateChanged;
             }
@@ -216,8 +220,15 @@ public class Shelf : MonoBehaviour
             m_type = ShelfType.BotomSpike;
         }
     }
+    class TeleportState : ShelfTypeState
+    {
+        public TeleportState()
+        {
+            m_type = ShelfType.Teleport;
+        }
+    }
     #endregion
-    Ball ball;
+    protected Ball ball;
     public ShelfType shelfType;
     ShelfTypeState m_shelfTypeState;
     #region States init
@@ -235,16 +246,17 @@ public class Shelf : MonoBehaviour
             {ShelfType.Sticky,typeof(StickyState)},
             {ShelfType.BotomSpike,typeof(BotomSpikeState)},
             {ShelfType.DoubleSpike,typeof(DoubleSpikeState)},
+            {ShelfType.Teleport,typeof(TeleportState)}
         };
     #endregion
-    Animator animator
+    protected Animator animator
     {
         get
         {
             return this.ToString() == "null" ? null : GetComponent<Animator>();
         }
     }
-	bool isPlayAnimation = false;
+	protected bool isPlayAnimation = false;
 	// Use this for initialization
 	void Start () 
 	{
@@ -298,11 +310,11 @@ public class Shelf : MonoBehaviour
         }
         return false;
     }
-    void OnKeyUpPressed()
+    protected void OnKeyUpPressed()
     {
 		SetAnimatorTrigger("ballUp");
     }
-    void OnNoKeyPressed(Collider2D inCollider)
+    protected void OnNoKeyPressed(Collider2D inCollider)
     {
 		isPlayAnimation = true;
 		if (GetIsOnGround(inCollider)) {
@@ -311,12 +323,12 @@ public class Shelf : MonoBehaviour
 			SetAnimatorTrigger("bottomBounce");
 		}
     }
-    void OnLeftKeyPressed()
+    protected void OnLeftKeyPressed()
     {
         ball.KeyUpPressed -= OnKeyUpPressed;
         SetAnimatorTrigger("ballLeft");
     }
-    void OnRightKeyPressed()
+    protected void OnRightKeyPressed()
     {
         ball.KeyUpPressed -= OnKeyUpPressed;
         SetAnimatorTrigger("ballRight");

@@ -15,6 +15,7 @@ public class Levels : MonoBehaviour
     Queue<Heart> hearts = new Queue<Heart>();
     List<Key> m_keys = new List<Key>();
     List<MonoBehaviour> m_shelfs = new List<MonoBehaviour>();
+    List<MonoBehaviour> m_shelfs_teleport = new List<MonoBehaviour>();
     public Ball Ball;
     Ball m_ball;
     GameObject m_currentLevel;
@@ -156,6 +157,7 @@ public class Levels : MonoBehaviour
             return;
         m_currentLevel = m_levels.Dequeue();
         m_shelfs.Clear();
+        m_shelfs_teleport.Clear();
         levelNum++;
         Transform[] currentLevelTransforms = m_currentLevel.GetComponentsInChildren<Transform>();
         foreach (Transform item in currentLevelTransforms)
@@ -176,6 +178,11 @@ public class Levels : MonoBehaviour
             {
                 Shelf temp = item.gameObject.GetComponent<Shelf>();
                 m_shelfs.Add(temp);
+            }
+            if (item.ToString().IndexOf("Shelf_teleport") >= 0)
+            {
+                Shelf temp = item.gameObject.GetComponent<Shelf>();
+                m_shelfs_teleport.Add(temp);
             }
             if (item.ToString().IndexOf("Exit") >= 0)
             {
