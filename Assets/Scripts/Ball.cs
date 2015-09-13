@@ -20,7 +20,7 @@ public class Ball : MonoBehaviour
         public Vector2 dist; // Направление движения
         public float speed; // Растояние которое пройдет игрок за один фрейм (кадр)
     }
-
+        #region BallState
     abstract class BallState // Общий интерфейс для всех состояний.
     {
         protected Ball m_context;
@@ -43,8 +43,10 @@ public class Ball : MonoBehaviour
             return "Ball State";
         } // перегрузка общ. метода для всех объектов
         abstract public BallStateType type { get; }
+		abstract public void Reverse();
     }
-
+        #endregion
+        #region BallStateHide
     class BallStateHide : BallState
     {
         //Ball m_context;
@@ -65,8 +67,12 @@ public class Ball : MonoBehaviour
                 return BallStateType.HIDE;
             }
         }
+		public override void Reverse() {
+			m_context.SetState(BallStateType.SHOW);
+		}
     }
-
+        #endregion
+        #region BallStateShow
     class BallStateShow : BallState
     {
         public BallStateShow(Ball context) : base(context) { }
@@ -115,13 +121,19 @@ public class Ball : MonoBehaviour
                 return BallStateType.SHOW;
             }
         }
+		public override void Reverse() {
+			m_context.SetState(BallStateType.HIDE);
+		}
     }
-
+        #endregion
+        #region BallStateInAir
     class BallStateInAir : BallState // Игрок пригнул вверх
     {
+        Vector3 m_lastPos;
         public BallStateInAir(Ball context) : base(context) { }
         override public void UpdateParams()
         {
+            m_lastPos = m_context.transform.position;
             return;
         }
         override public void Left(int columns)
@@ -140,6 +152,12 @@ public class Ball : MonoBehaviour
         }
         override public void Down()
         {
+            Vector3 currentPos = m_context.transform.position;
+            if ((currentPos.y - m_lastPos.y) < GameInfo.cellSide)
+            {
+                return;
+            }
+            m_lastPos = currentPos;
             m_context.SetState(BallStateType.TO_DOWN); // переходим в состояние движения вниз
         }
         override public void OnGround(ShelfType shelfType)
@@ -177,8 +195,12 @@ public class Ball : MonoBehaviour
                 return BallStateType.IN_AIR;
             }
         }
+		public override void Reverse() {
+			m_context.SetState(BallStateType.TO_DOWN);
+		}
     }
-
+        #endregion
+        #region BallStateToDown
     class BallStateToDown : BallState // Игрок двигается вниз
     {
         public BallStateToDown(Ball context) : base(context) { }
@@ -202,8 +224,12 @@ public class Ball : MonoBehaviour
                 return BallStateType.TO_DOWN;
             }
         }
+		public override void Reverse() {
+			m_context.SetState(BallStateType.IN_AIR);
+		}
     }
-
+        #endregion
+        #region BallStateToLeft
     class BallStateToLeft : BallState // Игрок двигается влево
     {
         public BallStateToLeft(Ball context) : base(context) { }
@@ -240,8 +266,12 @@ public class Ball : MonoBehaviour
                 return BallStateType.TO_LEFT;
             }
         }
+		public override void Reverse() {
+			m_context.SetState(BallStateType.TO_RIGHT);
+		}
     }
-
+        #endregion
+        #region BallStateToRight
     class BallStateToRight : BallState // Игрок двигается вправо
     {
         public BallStateToRight(Ball context) : base(context) { }
@@ -277,7 +307,12 @@ public class Ball : MonoBehaviour
                 return BallStateType.TO_RIGHT;
             }
         }
+		public override void Reverse() {
+			m_context.SetState(BallStateType.TO_LEFT);
+		}
     }
+        #endregion
+        #region BallStateJump
     class BallStateJump : BallState // Игрок прыгает на месте
     {
         public BallStateJump(Ball context) : base(context) { }
@@ -327,7 +362,11 @@ public class Ball : MonoBehaviour
                 return BallStateType.JUMP;
             }
         }
+		public override void Reverse() {
+			
+		}
     }
+        #endregion
     #endregion
     List<MonoBehaviour> m_Shelfs = new List<MonoBehaviour>(); // список всех доступных полок на сцене	
     public List<MonoBehaviour> Shelfs
@@ -426,6 +465,10 @@ public class Ball : MonoBehaviour
         return m_State.type;
     }
 
+	public void ClearMoveVectors() {
+		m_moveVectors.Clear();
+	}
+
     // Use this for initialization
     void Start()
     {
@@ -443,6 +486,10 @@ public class Ball : MonoBehaviour
         m_States[BallStateType.JUMP] = new BallStateJump(this);
         SetState(BallStateType.SHOW); // начальное состоянние. (можно продумать инициализ. при старте)
         anim = GetComponent<Animator>();
+        EnemyController.GameOver += delegate ()
+        {
+            GameOver();
+        };
     }
 
     int MinMultiple(float number, int multiply)
@@ -491,6 +538,10 @@ public class Ball : MonoBehaviour
         }
         foreach (MonoBehaviour s in shelfs) // перебираем все полочки на сцене
         {
+            if (s == null)
+            {
+                continue;
+            }
             float pY = s.transform.position.y; // значение У полки
             float pX = s.transform.position.x; // значение Х полки
             if (pY >= (upDek - halfSide) && pY <= (upDek + halfSide) && pX >= leftDek && pX <= rightDek)
@@ -579,7 +630,7 @@ public class Ball : MonoBehaviour
         while (cntFrames > 0)  // обработка движения влево/вправо по кадрам
         {
             x += d;
-            //y = x * (1 - x) * 1.75f;
+            y = x * (1 - x) * 1.75f / columns;
             //y = y;
             if (x > maxX / 2)
                 y = -y;
@@ -617,6 +668,7 @@ public class Ball : MonoBehaviour
             MoveInfo move = m_moveBackVectors.Pop(); // посл. движение            
             m_moveVectors.Enqueue(move); // перекладываем данные о движении в обратном порядке
         }
+		m_State.Reverse();
     }
 
     public void Jump()
@@ -640,7 +692,7 @@ public class Ball : MonoBehaviour
     // Update is called once per frame
     void FixedUpdate()
     {
-		m_State.Update();
+		m_State.Update();       
         PressedKey();
     }
 
@@ -654,11 +706,11 @@ public class Ball : MonoBehaviour
         {
             DownKey();
         }
-        if (Input.GetKey(KeyCode.RightArrow))
+        if (Input.GetKey(KeyCode.RightArrow) || Input.acceleration.x > 0.25f)
         {
             RightKey();
         }
-        if (Input.GetKey(KeyCode.LeftArrow))
+        if (Input.GetKey(KeyCode.LeftArrow) || Input.acceleration.x < -0.25f)
         {
             LeftKey();
         }
@@ -758,6 +810,9 @@ public class Ball : MonoBehaviour
 
     public void OnWall()
     {
-        m_State.OnWall(); // Делегируем обработку текущему состоянию
+        m_State.OnWall();
+    }
+    public void EmitGameOver() {
+        //GameOver();
     }
 }

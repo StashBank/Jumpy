@@ -45,9 +45,11 @@ public class Shelf : MonoBehaviour
             else
                 m_ball.OnGround(m_type);
         }
-        public virtual void TeleportTo()
-        {
-
+        public virtual void Reset() {
+            if (m_context.animator != null)
+            {
+                m_context.animator.SetTrigger("Reset");
+            }
         }
         protected bool GetIsOnGround(Collider2D inCollider)
         {
@@ -74,6 +76,7 @@ public class Shelf : MonoBehaviour
     class ShelfTypeDisappearByOneJumpState : ShelfTypeState
     {
         protected int count = 1;
+        Vector3 initialScale;
         protected  float step = 0.0f;
         private Collider2D inCollider;
         public ShelfTypeDisappearByOneJumpState()
@@ -83,6 +86,7 @@ public class Shelf : MonoBehaviour
         public override void SetParam(Shelf context, Ball ball)
         {
             base.SetParam(context, ball);
+            initialScale = m_context.transform.localScale;
             step = m_context.transform.localScale.x / count;
         }
         public override void OnTriggerEnter2D(Collider2D inCollider)
@@ -94,7 +98,6 @@ public class Shelf : MonoBehaviour
             }
             base.OnTriggerEnter2D(inCollider);
         }
-
         void OnBallStateChanged(Ball.BallStateType newState)
         {
             if (newState == Ball.BallStateType.SHOW)
@@ -110,9 +113,15 @@ public class Shelf : MonoBehaviour
                 {
                     m_context.GetComponent<Renderer>().enabled = false;
                     m_context.GetComponent<Collider2D>().isTrigger = false;
-                    Destroy(m_context);
                 }
             }           
+        }
+        public override void Reset()
+        {
+            m_context.GetComponent<Renderer>().enabled = true;
+            m_context.GetComponent<Collider2D>().isTrigger = true;
+            base.Reset();
+            m_context.transform.localScale = initialScale;
         }
     }
     #endregion
@@ -271,8 +280,12 @@ public class Shelf : MonoBehaviour
 	{
 
 	}
+    public virtual void Reset(){
+        m_shelfTypeState.Reset();
+    }
 	void OnTriggerEnter2D(Collider2D inCollider)
 	{
+		ball.ClearMoveVectors();
 		OnNoKeyPressed(inCollider);
         m_shelfTypeState.OnTriggerEnter2D(inCollider);
         if (GetIsOnGround(inCollider))

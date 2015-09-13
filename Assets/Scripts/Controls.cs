@@ -18,6 +18,10 @@ public class Controls : MonoBehaviour {
     {
         //Arrows:
         Arrows = GameObject.Find("Arrows");
+        if (Application.platform != RuntimePlatform.Android) {
+            Arrows.SetActive(false);
+            return;
+        }
         Transform[] arrows = new Transform[4]; // масив кнопок
         arrows[0] = Arrows.transform.Find("ArrowLeft"); //ищем кнопку по названию
         arrows[1] = Arrows.transform.Find("ArrowRight");

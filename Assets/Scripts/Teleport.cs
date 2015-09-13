@@ -17,11 +17,18 @@ public class Teleport : Shelf {
 	}
     void OnTriggerEnter2D(Collider2D inCollider)
     {
-        ball.SetState(Ball.BallStateType.HIDE);
+        ball.SetState(Ball.BallStateType.IN_AIR);
+		ball.ClearMoveVectors();
         Vector3 target = TargetTeleport.transform.position;
         target.y += ball.GetComponent<SpriteRenderer>().bounds.extents.y + 1f;
         ball.transform.position = target;
-        ball.SetState(Ball.BallStateType.SHOW);
-        ball.SetState(Ball.BallStateType.IN_AIR);
+    }
+
+    public override void Reset()
+    {
+        if (animator != null)
+        {
+            animator.SetTrigger("Reset");
+        }
     }
 }

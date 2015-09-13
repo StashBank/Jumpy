@@ -21,8 +21,8 @@ public class Key : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D inCollider)
     {
-        if(keyGet != null)
-            keyGet(this);
-        Destroy(this.gameObject);
+        gameObject.SetActive(false);
+        if (keyGet != null)
+            keyGet(this);     
     }
 }

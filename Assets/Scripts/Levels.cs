@@ -16,7 +16,9 @@ public class Levels : MonoBehaviour
     List<Key> m_keys = new List<Key>();
     List<MonoBehaviour> m_shelfs = new List<MonoBehaviour>();
     List<MonoBehaviour> m_shelfs_teleport = new List<MonoBehaviour>();
+    List<EnemyController> m_Enemies = new List<EnemyController>();
     public Ball Ball;
+    List<Wall> m_wall = new List<Wall>();
     Ball m_ball;
     GameObject m_currentLevel;
     Exit m_exit;
@@ -29,19 +31,16 @@ public class Levels : MonoBehaviour
 
     public GameObject backGround;
     Queue<MoveInfo> m_backGroundMoveInfo = new Queue<MoveInfo>();
-    int levelNum = 0;
-    float _timer = 0;
-    const int SECONDS_IN_HOUR = 3600;
-    const int SECONDS_IN_MINUTE = 60;
-    int Points = 0;
     void OnKeyGet(Key sender)
     {
-        Points++;
-        m_keys.Remove(sender);
-        if (m_keys.Count == 0)
+        foreach (Key key in m_keys)
         {
-            m_exit.SetState(ExitStateTytpes.SHOW);
+            if (key.gameObject.active)
+            {
+                return;
+            }       
         }
+        m_exit.SetState(ExitStateTytpes.SHOW);
 
     }
     void OnLevelExit(Exit sender)
@@ -73,33 +72,6 @@ public class Levels : MonoBehaviour
             }
             m_backGroundMoveInfo.Enqueue(new MoveInfo(new Vector2(-1, 0), dif));
         }
-    }
-
-    
-    void OnGUI()
-    {
-        string levelCaption = "Level " + levelNum;
-        GUIStyle style = new GUIStyle();
-        style.border = new RectOffset(0, 0, 0, 0);
-        style.fontSize = 24;
-        GUI.Box(new Rect(420,20,60,30),levelCaption,style);
-
-        _timer += Time.deltaTime;
-        int timer = (int)_timer;
-        //System.DateTime time = new System.DateTime(0, 0, 0, 0, 0, timer,0);
-        int hours = (int)timer / SECONDS_IN_HOUR;
-        timer %= SECONDS_IN_HOUR;
-        int minutes = (int)timer / SECONDS_IN_MINUTE;
-        timer %= SECONDS_IN_MINUTE;
-        int seconds = (int)timer;
-        string displayTime = string.Format("{0}:{1}:{2}", 
-            (hours > 9) ? hours.ToString() : "0" + hours.ToString(), 
-            (minutes > 9) ? minutes.ToString() : "0" + minutes.ToString(),
-            (seconds > 9) ? seconds.ToString() : "0" + seconds.ToString()
-            );
-        GUI.Box(new Rect(120, 20, 60, 30), displayTime, style);
-
-        GUI.Box(new Rect(650, 20, 60, 30), Points.ToString(), style);
     }
 
     // Use this for initialization
@@ -149,16 +121,38 @@ public class Levels : MonoBehaviour
             }
         }
         NextLevel();
+        FloorExit.ResetLevel += ResetLevel;
     }
 
+
+    void ResetLevel()
+    {
+        foreach (MonoBehaviour item in m_shelfs)
+        {
+            if (item is Shelf)
+            {
+                Shelf shelf = item as Shelf;
+                shelf.Reset();
+            }
+        }
+        foreach (Wall item in m_wall)
+        {
+            item.Reset();
+        }
+        foreach (Key key in m_keys)
+        {
+            key.gameObject.SetActive(true);
+        }
+        m_exit.SetState(ExitStateTytpes.HIDE);
+    }
     void NextLevel()
     {
         if (m_levels.Count < 1) // Win mission
             return;
         m_currentLevel = m_levels.Dequeue();
         m_shelfs.Clear();
+        m_Enemies.Clear();
         m_shelfs_teleport.Clear();
-        levelNum++;
         Transform[] currentLevelTransforms = m_currentLevel.GetComponentsInChildren<Transform>();
         foreach (Transform item in currentLevelTransforms)
         {
@@ -179,6 +173,11 @@ public class Levels : MonoBehaviour
                 Shelf temp = item.gameObject.GetComponent<Shelf>();
                 m_shelfs.Add(temp);
             }
+            if(item.ToString().IndexOf("Vertical_") >= 0)
+            {
+                Wall temp = item.gameObject.GetComponent<Wall>();
+                m_wall.Add(temp);
+            }
             if (item.ToString().IndexOf("Shelf_teleport") >= 0)
             {
                 Shelf temp = item.gameObject.GetComponent<Shelf>();
@@ -195,6 +194,12 @@ public class Levels : MonoBehaviour
                 PlayerPrefs.SetFloat("levelPositionX", item.position.x);
                 PlayerPrefs.SetFloat("levelPositionY", item.position.y);
             }
+            if (item.ToString().IndexOf("Enemy") >= 0)
+            {
+                EnemyController temp = item.gameObject.GetComponent<EnemyController>();
+                temp.ChangeMoving(true);
+                m_Enemies.Add(temp);
+            }
         }
         m_ball.Shelfs = m_shelfs;
         m_ball.SetState(Ball.BallStateType.SHOW);
@@ -205,6 +210,10 @@ public class Levels : MonoBehaviour
     {
         if (toNextLevel)
         {
+            foreach(var enemy in m_Enemies)
+            {
+                enemy.ChangeMoving(false);
+            }
             if (m_backGroundMoveInfo.Count > 0)
             {
                 MoveInfo move = m_backGroundMoveInfo.Dequeue();
@@ -222,7 +231,8 @@ public class Levels : MonoBehaviour
             }
             else
             {
-                Destroy(m_currentLevel.gameObject);
+                //Destroy(m_currentLevel.gameObject);
+                m_currentLevel.gameObject.SetActive(false);
                 NextLevel();
                 toNextLevel = false;
             }
