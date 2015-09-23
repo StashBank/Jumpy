@@ -48,9 +48,7 @@ public class Levels : MonoBehaviour
         toNextLevel = true;
         m_ball.SetState(Ball.BallStateType.HIDE);
 
-        //int cnt = (int)(m_W / Speed) - 60;
         int cnt = (int)(m_W / Speed);
-        //float dif = m_H % Speed;
         float dif = m_W % Speed;
 
         while (cnt > 0)
@@ -208,9 +206,10 @@ public class Levels : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
         if (toNextLevel)
         {
-            foreach(var enemy in m_Enemies)
+            foreach(EnemyController enemy in m_Enemies)
             {
                 enemy.ChangeMoving(false);
             }
@@ -233,6 +232,10 @@ public class Levels : MonoBehaviour
             {
                 //Destroy(m_currentLevel.gameObject);
                 m_currentLevel.gameObject.SetActive(false);
+                for (int i = 0; i < 2; i++)
+                {
+                    NextLevel();
+                }
                 NextLevel();
                 toNextLevel = false;
             }

@@ -624,13 +624,13 @@ public class Ball : MonoBehaviour
 
         float y = 0;
         float x = 0;
-        const float maxX = 1.0f;
+        const float maxX = 1f;
         float d = maxX / cntFrames;
 
         while (cntFrames > 0)  // обработка движения влево/вправо по кадрам
         {
             x += d;
-            y = x * (1 - x) * 1.75f / columns;
+            y = x * (1 - x) * 1f / columns;
             //y = y;
             if (x > maxX / 2)
                 y = -y;

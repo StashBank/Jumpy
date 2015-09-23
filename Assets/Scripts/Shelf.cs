@@ -21,7 +21,6 @@ public enum ShelfType {
     BotomSpike, //Шипы снизу полки (Горизонтальная)
     PullUp,
     Cloud, //?????
-    Teleport
 }
 #endregion
 public class Shelf : MonoBehaviour
@@ -39,7 +38,6 @@ public class Shelf : MonoBehaviour
         }
         public virtual void OnTriggerEnter2D(Collider2D inCollider)
         {
-            
             if (!GetIsOnGround(inCollider))
                 m_ball.OnCeiling(m_type);
             else
@@ -229,13 +227,6 @@ public class Shelf : MonoBehaviour
             m_type = ShelfType.BotomSpike;
         }
     }
-    class TeleportState : ShelfTypeState
-    {
-        public TeleportState()
-        {
-            m_type = ShelfType.Teleport;
-        }
-    }
     #endregion
     protected Ball ball;
     public ShelfType shelfType;
@@ -254,8 +245,7 @@ public class Shelf : MonoBehaviour
             {ShelfType.ChangeableToTowardsOn1Cells,typeof(ChangeableToTowardsOn1CellsState)},
             {ShelfType.Sticky,typeof(StickyState)},
             {ShelfType.BotomSpike,typeof(BotomSpikeState)},
-            {ShelfType.DoubleSpike,typeof(DoubleSpikeState)},
-            {ShelfType.Teleport,typeof(TeleportState)}
+            {ShelfType.DoubleSpike,typeof(DoubleSpikeState)}
         };
     #endregion
     protected Animator animator
@@ -286,16 +276,16 @@ public class Shelf : MonoBehaviour
 	void OnTriggerEnter2D(Collider2D inCollider)
 	{
 		ball.ClearMoveVectors();
-		OnNoKeyPressed(inCollider);
         m_shelfTypeState.OnTriggerEnter2D(inCollider);
+        OnNoKeyPressed(inCollider);
         if (GetIsOnGround(inCollider))
         {
-			isPlayAnimation = true;
+            isPlayAnimation = true;
             ball.KeyUpPressed += OnKeyUpPressed;
             ball.KeyLeftPressed += OnLeftKeyPressed;
             ball.KeyRightPressed += OnRightKeyPressed;
         }
-	}
+    }
     ShelfTypeState GetShelfType()
     {
         Type type = null;
@@ -335,6 +325,11 @@ public class Shelf : MonoBehaviour
 		} else {
 			SetAnimatorTrigger("bottomBounce");
 		}
+    }
+    protected void OnKeyDownPressed()
+    {
+        ball.KeyDownPressed-= OnKeyDownPressed;
+        print("KeyDown");
     }
     protected void OnLeftKeyPressed()
     {

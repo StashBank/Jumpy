@@ -92,7 +92,11 @@ public class Exit : MonoBehaviour {
     public void ExitFormLevel()
     {
         if(levelExit != null)
-            levelExit(this);
+            for (int i = 0; i < 2; i++)
+            {
+                levelExit(this);
+            }
+        levelExit(this);
         Destroy(this.gameObject);
     }
 }
